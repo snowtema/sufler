@@ -1,13 +1,15 @@
 # Суфлёр
 
-Веб-суфлёр для записи видео: текст показывается по одному слову в одной точке экрана, прямо под камерой, чтобы глаза не бегали по строчкам. Темп, паузы и акценты задаются разметкой внутри текста.
+Веб-суфлёр для записи видео — [sufler.artemslizhik.com](https://sufler.artemslizhik.com): текст показывается по одному слову в одной точке экрана, прямо под камерой, чтобы глаза не бегали по строчкам. Темп, паузы и акценты задаются разметкой внутри текста.
 
 ## Запуск
 
-Откройте `index.html` в браузере или поднимите любой статический сервер:
+Сайт целиком лежит в `public/`. Откройте `public/index.html` в браузере или поднимите статический сервер:
 
 ```bash
-python3 -m http.server 5173
+python3 -m http.server 5173 -d public
+# или так же, как в продакшене:
+npx wrangler dev
 ```
 
 ## Разметка
@@ -26,9 +28,20 @@ python3 -m http.server 5173
 
 ## Файлы
 
-- `parser.js` — разбор разметки в последовательность кадров и расчёт длительности
-- `app.js` — редактор, настройки и сцена чтения
-- `index.html`, `styles.css` — интерфейс
+- `public/parser.js` — разбор разметки в последовательность кадров и расчёт длительности
+- `public/app.js` — редактор, настройки и сцена чтения
+- `public/index.html`, `public/styles.css` — интерфейс
+- `wrangler.jsonc` — конфиг Cloudflare Workers (статические файлы + домен)
+
+## Деплой
+
+Каждый пуш в `main` выкатывает сайт на Cloudflare через GitHub Actions (`.github/workflows/deploy.yml`). Нужен секрет репозитория `CLOUDFLARE_API_TOKEN` — токен с шаблоном «Edit Cloudflare Workers», у которого в зонах есть `artemslizhik.com`.
+
+Вручную:
+
+```bash
+npx wrangler deploy
+```
 
 ## Скилл для Claude Code
 
@@ -43,6 +56,6 @@ cp -R skill/sufler-markup ~/.claude/skills/
 Скрипт проверки использует свою копию `parser.js`. После изменений синтаксиса обновите её и переустановите скилл:
 
 ```bash
-cp parser.js skill/sufler-markup/scripts/parser.js
+cp public/parser.js skill/sufler-markup/scripts/parser.js
 cp -R skill/sufler-markup ~/.claude/skills/
 ```

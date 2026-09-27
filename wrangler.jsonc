@@ -1,0 +1,12 @@
+{
+  // Статический сайт на Workers Static Assets: без скрипта, только файлы из public/
+  "name": "sufler",
+  "account_id": "49692a68920d96ed006d4d502d604cd6",
+  "compatibility_date": "2026-09-20",
+  "assets": {
+    "directory": "./public"
+  },
+  "routes": [
+    { "pattern": "sufler.artemslizhik.com", "custom_domain": true }
+  ]
+}
