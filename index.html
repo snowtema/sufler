@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Суфлёр</title>
+  <meta name="description" content="Суфлёр для записи видео: слова по одному в одной точке экрана, темп и паузы задаются разметкой в тексте.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Golos+Text:wght@400;600;700&family=PT+Serif:wght@400;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="brand"><span class="tally" aria-hidden="true"></span>Суфлёр</div>
+      <div class="seg mode-switch" id="mode" role="radiogroup" aria-label="Режим интерфейса">
+        <button type="button" data-v="simple" title="Минимум настроек">Простой</button><button type="button" data-v="pro" title="Все настройки">Про</button>
+      </div>
+      <div class="stats" id="stats" aria-live="polite"></div>
+      <div class="actions">
+        <button class="btn" id="startCursor" type="button" title="Начать со слова под курсором (⌘/Ctrl + Enter)">С курсора</button>
+        <button class="btn btn-rec" id="start" type="button"><span class="rec-dot" aria-hidden="true"></span>Начать чтение</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="editor-col" aria-label="Текст">
+        <div class="toolbar" id="toolbar" role="toolbar" aria-label="Вставить разметку">
+          <button type="button" data-simple data-insert="//" title="Пауза на секунду: //">пауза</button>
+          <button type="button" data-pro data-insert="/" title="Короткая пауза">/</button>
+          <button type="button" data-pro data-insert="//" title="Обычная пауза">//</button>
+          <button type="button" data-pro data-insert="///" title="Длинная пауза">///</button>
+          <button type="button" data-pro data-insert="[PAUSE 2]" title="Пауза в секундах">пауза 2 с</button>
+          <button type="button" data-insert="[STOP]" title="Остановиться и ждать пробела">стоп</button>
+          <span class="sep" data-pro aria-hidden="true"></span>
+          <button type="button" data-wrap="*|*" title="Выделить акцент">*акцент*</button>
+          <button type="button" data-pro data-wrap="[SLOW] | [/SLOW]" title="Медленнее участок">медленнее</button>
+          <button type="button" data-pro data-wrap="[FAST] | [/FAST]" title="Быстрее участок">быстрее</button>
+          <button type="button" data-pro data-insert="[смотри в камеру]" title="Ремарка: видна над словом, не читается">ремарка</button>
+          <button type="button" data-pro data-line="# " title="Раздел: не показывается, по нему можно перейти">раздел</button>
+        </div>
+
+        <div class="editor" id="editorWrap">
+          <div class="editor-mirror" id="mirror" aria-hidden="true"></div>
+          <textarea id="text" spellcheck="true" aria-label="Текст выступления" placeholder="Вставьте текст выступления. Паузы: / // ///, акценты: *слово*, стоп: [STOP]"></textarea>
+        </div>
+
+        <details class="cheatsheet" id="cheatsheet">
+          <summary>Разметка текста</summary>
+          <dl>
+            <dt><code>/</code> <code>//</code> <code>///</code></dt><dd>Короткая, обычная и длинная пауза. То же словами: <code>[PAUSE-SHORT]</code> <code>[PAUSE]</code> <code>[PAUSE-LONG]</code></dd>
+            <dt data-pro><code>[PAUSE 2.5]</code></dt><dd data-pro>Пауза точной длины в секундах</dd>
+            <dt><code>[STOP]</code></dt><dd>Остановка до нажатия пробела. Удобно, чтобы переключить слайд или перевести дыхание</dd>
+            <dt><code>*слово*</code></dt><dd>Акцент: слово выделено цветом и показывается чуть дольше. Можно выделить несколько слов</dd>
+            <dt data-pro><code>[SLOW]…[/SLOW]</code></dt><dd data-pro>Участок медленнее (×0,75). <code>[FAST]…[/FAST]</code> быстрее (×1,3), <code>[SPEED 0.8]…[/SPEED]</code> задаёт свой множитель</dd>
+            <dt data-pro><code>[любой текст]</code></dt><dd data-pro>Ремарка: мелко над словом, читать её не нужно. Например <code>[улыбнись]</code></dd>
+            <dt data-pro><code># Заголовок</code></dt><dd data-pro>Раздел. На экране его нет, но на паузе можно перейти к нему и перезаписать дубль</dd>
+            <dt>Пустая строка, знаки</dt><dd>Абзацы и знаки препинания сами добавляют паузы<span data-pro>. Их силу меняет настройка «Паузы на знаках»</span></dd>
+            <dt data-simple>Ещё</dt><dd data-simple>Замедление, ускорение, ремарки и разделы описаны в режиме «Про». Если они уже есть в тексте, то работают и здесь</dd>
+            <dt data-pro>По-русски</dt><dd data-pro>Команды можно писать и так: <code>[ПАУЗА]</code> <code>[ПАУЗА 2]</code> <code>[СТОП]</code> <code>[МЕДЛЕННО]</code> <code>[БЫСТРО]</code></dd>
+          </dl>
+        </details>
+      </section>
+
+      <aside class="settings-col" aria-label="Настройки">
+        <figure class="monitor" id="monitor" aria-label="Где на экране будет блок">
+          <div class="monitor-screen" id="monitorScreen">
+            <span class="cam" title="Камера"></span>
+            <div class="monitor-block" id="monitorBlock"><div class="monitor-word" id="monitorWord"></div></div>
+          </div>
+          <figcaption>Так блок встанет на вашем экране</figcaption>
+        </figure>
+
+        <fieldset class="group">
+          <legend>Темп</legend>
+          <div class="duration" aria-live="polite">
+            <span class="duration-label">Выступление займёт</span>
+            <span class="duration-value">≈&thinsp;<b id="durationValue">0:00</b></span>
+            <span class="duration-note" id="durationNote"></span>
+          </div>
+          <label class="row"><span>Скорость</span><output id="wpmOut"></output>
+            <input type="range" id="wpm" min="60" max="360" step="5"></label>
+          <div class="row" data-pro><span>Слов за раз</span>
+            <div class="seg" id="chunk" role="radiogroup" aria-label="Слов за раз">
+              <button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button>
+            </div></div>
+          <label class="row" data-pro><span>Паузы на знаках</span><output id="punctFactorOut"></output>
+            <input type="range" id="punctFactor" min="0" max="2.5" step="0.1"></label>
+          <label class="check" data-pro><input type="checkbox" id="lengthAware"><span>Длинные слова дольше</span></label>
+          <div class="row pauses" data-pro><span>Паузы, с</span>
+            <label title="Короткая: /"><input type="number" id="pShort" min="0" max="10" step="0.1"><small>/</small></label>
+            <label title="Обычная: //"><input type="number" id="pMedium" min="0" max="10" step="0.1"><small>//</small></label>
+            <label title="Длинная: ///"><input type="number" id="pLong" min="0" max="20" step="0.1"><small>///</small></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>Блок</legend>
+          <label class="row"><span>Ширина</span><output id="widthOut"></output>
+            <input type="range" id="width" min="160" max="1800" step="10"></label>
+          <label class="row"><span>Размер шрифта</span><output id="fontSizeOut"></output>
+            <input type="range" id="fontSize" min="24" max="220" step="2"></label>
+          <div class="row"><span>Положение</span>
+            <div class="seg" id="posPreset" role="radiogroup" aria-label="Положение блока">
+              <button type="button" data-v="camera">Под камерой</button><button type="button" data-v="center">По центру</button>
+            </div></div>
+          <label class="row" data-pro><span>По горизонтали</span><output id="posXOut"></output>
+            <input type="range" id="posX" min="0" max="100" step="1"></label>
+          <label class="row" data-pro><span>По вертикали</span><output id="posYOut"></output>
+            <input type="range" id="posY" min="0" max="100" step="1"></label>
+          <p class="hint">На паузе блок можно перетащить мышью, а ширину менять за края.</p>
+        </fieldset>
+
+        <fieldset class="group" data-pro>
+          <legend>Вид</legend>
+          <label class="row"><span>Шрифт</span>
+            <select id="font">
+              <option value="Onest">Onest</option>
+              <option value="Golos Text">Golos Text</option>
+              <option value="PT Serif">PT Serif</option>
+              <option value="JetBrains Mono">JetBrains Mono</option>
+            </select></label>
+          <div class="row"><span>Начертание</span>
+            <div class="seg" id="weight" role="radiogroup" aria-label="Начертание">
+              <button type="button" data-v="400">Обычное</button><button type="button" data-v="600">Жирное</button>
+            </div></div>
+          <div class="row"><span>Тема</span>
+            <div class="seg" id="theme" role="radiogroup" aria-label="Тема">
+              <button type="button" data-v="dark">Тёмная</button><button type="button" data-v="light">Светлая</button><button type="button" data-v="amber">Янтарь</button>
+            </div></div>
+          <div class="row"><span>Выравнивание</span>
+            <div class="seg" id="align" role="radiogroup" aria-label="Выравнивание">
+              <button type="button" data-v="orp" title="Буква фокуса всегда в одной точке">По фокусу</button><button type="button" data-v="center">По центру</button>
+            </div></div>
+          <label class="check"><input type="checkbox" id="guides"><span>Засечки над буквой фокуса</span></label>
+          <label class="check"><input type="checkbox" id="frame"><span>Рамка блока во время чтения</span></label>
+          <label class="check"><input type="checkbox" id="flip"><span>Зеркально (для суфлёра со стеклом)</span></label>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>Запуск</legend>
+          <label class="check"><input type="checkbox" id="beep"><span>Бип на обратном отсчёте</span></label>
+          <div class="row" data-pro><span>Обратный отсчёт</span>
+            <div class="seg" id="countdown" role="radiogroup" aria-label="Обратный отсчёт">
+              <button type="button" data-v="0">нет</button><button type="button" data-v="3">3 с</button><button type="button" data-v="5">5 с</button>
+            </div></div>
+          <label class="check" data-pro><input type="checkbox" id="fullscreen"><span>Во весь экран</span></label>
+          <label class="check" data-pro><input type="checkbox" id="progress"><span>Полоска прогресса во время чтения</span></label>
+          <button type="button" class="link" id="reset">Сбросить настройки</button>
+        </fieldset>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Сцена чтения -->
+  <div class="stage" id="stage" hidden>
+    <div class="stage-inner" id="stageInner">
+      <div class="block" id="block">
+        <div class="cue" id="cue"></div>
+        <div class="line" id="line">
+          <div class="word" id="word"></div>
+          <i class="guide guide-top" aria-hidden="true"></i>
+          <i class="guide guide-bottom" aria-hidden="true"></i>
+        </div>
+        <div class="pausebar" id="pausebar"><i></i></div>
+        <span class="handle handle-l" data-handle="l" aria-hidden="true"></span>
+        <span class="handle handle-r" data-handle="r" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div class="stage-progress" id="stageProgress"><i></i></div>
+    <div class="toast" id="toast" role="status"></div>
+
+    <div class="hud" id="hud">
+      <div class="hud-top">
+        <div class="hud-where" id="hudWhere"></div>
+        <button type="button" class="hud-btn" id="exitStage">Выйти <kbd>Esc</kbd></button>
+      </div>
+      <div class="hud-panel">
+        <div class="hud-sections" id="hudSections"></div>
+        <p class="hud-context" id="hudContext"></p>
+        <div class="hud-controls">
+          <button type="button" class="hud-btn hud-play" id="hudPlay">Продолжить <kbd>Пробел</kbd></button>
+          <button type="button" class="hud-btn" id="hudBackSentence">К началу предложения <kbd>⇧←</kbd></button>
+          <button type="button" class="hud-btn" id="hudRestart">С начала <kbd>R</kbd></button>
+        </div>
+        <p class="hud-keys"><kbd>←</kbd><kbd>→</kbd> слово · <kbd>↑</kbd><kbd>↓</kbd> скорость · <kbd>+</kbd><kbd>−</kbd> шрифт · <kbd>[</kbd><kbd>]</kbd> ширина · <kbd>F</kbd> весь экран<span data-pro> · <kbd>M</kbd> зеркало</span></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="parser.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
