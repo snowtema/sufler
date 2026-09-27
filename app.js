@@ -194,10 +194,16 @@
   const SEGS = { mode: String, chunk: Number, weight: Number, theme: String, align: String, countdown: Number };
   const PAUSE_INPUTS = { pShort: 'short', pMedium: 'medium', pLong: 'long' };
 
+  function setFill(input) {
+    const min = Number(input.min), max = Number(input.max);
+    input.style.setProperty('--p', ((Number(input.value) - min) / (max - min)) * 100 + '%');
+  }
+
   function syncUI() {
     for (const [k, fmt] of Object.entries(RANGES)) {
       $(k).value = S[k];
       $(k + 'Out').textContent = fmt(S[k]);
+      setFill($(k));
     }
     for (const k of CHECKS) $(k).checked = !!S[k];
     for (const k of Object.keys(SEGS)) {
@@ -229,6 +235,7 @@
       $(k).addEventListener('input', () => {
         S[k] = Number($(k).value);
         $(k + 'Out').textContent = fmt(S[k]);
+        setFill($(k));
         if (k === 'posX' || k === 'posY') syncUI();
         onSettingsChange();
       });
@@ -326,6 +333,12 @@
     el.style.fontSize = fit + 'px';
   }
 
+  function restartAnimation(el) {
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+  }
+
   function drawStatus(el, str, cls) {
     el.className = 'word ' + cls;
     el.textContent = str;
@@ -348,9 +361,51 @@
     b.style.fontFamily = `"${C.font}", system-ui, sans-serif`;
     b.style.fontWeight = C.weight;
     b.style.transform = `translate(-50%, -50%)${C.flip ? ' scaleX(-1)' : ''}`;
-    const p = getParsed();
-    const first = p.tokens.find((t) => t.type === 'word') || { text: 'Суфлёр', emph: false };
-    drawWords($('monitorWord'), [first], C.fontSize * k, (C.width - 32) * k);
+    const el = $('monitorWord');
+    if (preview.frame) {
+      if (preview.frame.type === 'words') drawWords(el, preview.frame.words, C.fontSize * k, (C.width - 32) * k);
+      else { el.className = 'word'; el.textContent = ''; }
+      return;
+    }
+    const first = getParsed().tokens.find((t) => t.type === 'word') || { text: 'Суфлёр', emph: false };
+    drawWords(el, [first], C.fontSize * k, (C.width - 32) * k);
+  }
+
+  // Проигрывает начало текста прямо в мини-мониторе, чтобы проверить темп без полноэкранного режима
+  const preview = { timer: 0, frame: null, list: [], i: 0 };
+
+  function startPreview() {
+    const all = P.buildFrames(getParsed(), C.chunk).filter((f) => f.type !== 'stop');
+    const list = [];
+    let words = 0;
+    for (const f of all) {
+      list.push(f);
+      if (f.type === 'words') {
+        words += f.words.length;
+        if (words >= 12 && f.words[f.words.length - 1].punct >= 1.2) break;
+      }
+      if (words >= 30) break;
+    }
+    if (!list.length) return;
+    Object.assign(preview, { list, i: 0 });
+    $('monitor').classList.add('live');
+    $('monitorPlay').textContent = 'Стоп';
+    stepPreview();
+  }
+
+  function stepPreview() {
+    if (preview.i >= preview.list.length) { stopPreview(); return; }
+    preview.frame = preview.list[preview.i++];
+    renderMonitor();
+    preview.timer = setTimeout(stepPreview, P.frameMs(preview.frame, C));
+  }
+
+  function stopPreview() {
+    clearTimeout(preview.timer);
+    preview.frame = null;
+    $('monitor').classList.remove('live');
+    $('monitorPlay').textContent = 'Проверить темп';
+    renderMonitor();
   }
 
   // ——— Сцена чтения ———
@@ -470,7 +525,7 @@
       countdownLeft -= dt;
       if (countdownLeft <= 0) { beepGo(); setState('playing'); enterFrame(); return; }
       const n = Math.ceil(countdownLeft / 1000);
-      if (n !== shownCount) { shownCount = n; beepTick(); renderFrame(); }
+      if (n !== shownCount) { shownCount = n; beepTick(); renderFrame(); restartAnimation(wordEl); }
       return;
     }
     if (state !== 'playing') return;
@@ -625,6 +680,7 @@
   }
 
   function openStage(fromCursor) {
+    if (preview.frame) stopPreview();
     const p = getParsed();
     frames = P.buildFrames(p, C.chunk);
     if (!p.wordCount) { ta.focus(); updateStats(); return; }
@@ -789,6 +845,7 @@
     $('toolbar').addEventListener('click', onToolbar);
     $('start').addEventListener('click', () => openStage(false));
     $('startCursor').addEventListener('click', () => openStage(true));
+    $('monitorPlay').addEventListener('click', () => (preview.frame ? stopPreview() : startPreview()));
 
     new ResizeObserver(() => { renderMonitor(); renderMirror(); }).observe($('monitorScreen'));
     new ResizeObserver(() => { mirror.scrollTop = ta.scrollTop; }).observe(ta);

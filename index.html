@@ -7,13 +7,13 @@
   <meta name="description" content="Суфлёр для записи видео: слова по одному в одной точке экрана, темп и паузы задаются разметкой в тексте.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Golos+Text:wght@400;600;700&family=PT+Serif:wght@400;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600&family=Golos+Text:wght@400;600;700&family=PT+Serif:wght@400;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app" id="app">
     <header class="topbar">
-      <div class="brand"><span class="tally" aria-hidden="true"></span>Суфлёр</div>
+      <div class="brand"><span class="tally" aria-hidden="true"></span><span class="wordmark">Суфлёр</span></div>
       <div class="seg mode-switch" id="mode" role="radiogroup" aria-label="Режим интерфейса">
         <button type="button" data-v="simple" title="Минимум настроек">Простой</button><button type="button" data-v="pro" title="Все настройки">Про</button>
       </div>
@@ -26,28 +26,30 @@
 
     <main class="layout">
       <section class="editor-col" aria-label="Текст">
-        <div class="toolbar" id="toolbar" role="toolbar" aria-label="Вставить разметку">
-          <button type="button" data-simple data-insert="//" title="Пауза на секунду: //">пауза</button>
-          <button type="button" data-pro data-insert="/" title="Короткая пауза">/</button>
-          <button type="button" data-pro data-insert="//" title="Обычная пауза">//</button>
-          <button type="button" data-pro data-insert="///" title="Длинная пауза">///</button>
-          <button type="button" data-pro data-insert="[PAUSE 2]" title="Пауза в секундах">пауза 2 с</button>
-          <button type="button" data-insert="[STOP]" title="Остановиться и ждать пробела">стоп</button>
-          <span class="sep" data-pro aria-hidden="true"></span>
-          <button type="button" data-wrap="*|*" title="Выделить акцент">*акцент*</button>
-          <button type="button" data-pro data-wrap="[SLOW] | [/SLOW]" title="Медленнее участок">медленнее</button>
-          <button type="button" data-pro data-wrap="[FAST] | [/FAST]" title="Быстрее участок">быстрее</button>
-          <button type="button" data-pro data-insert="[смотри в камеру]" title="Ремарка: видна над словом, не читается">ремарка</button>
-          <button type="button" data-pro data-line="# " title="Раздел: не показывается, по нему можно перейти">раздел</button>
-        </div>
+        <div class="sheet">
+          <div class="toolbar" id="toolbar" role="toolbar" aria-label="Вставить разметку">
+            <button type="button" class="chip" data-simple data-insert="//" title="Пауза на секунду"><span class="glyph">//</span>пауза</button>
+            <button type="button" class="chip" data-pro data-insert="/" title="Короткая пауза, 0,5 с"><span class="glyph">/</span>короткая</button>
+            <button type="button" class="chip" data-pro data-insert="//" title="Обычная пауза, 1 с"><span class="glyph">//</span>пауза</button>
+            <button type="button" class="chip" data-pro data-insert="///" title="Длинная пауза, 2 с"><span class="glyph">///</span>длинная</button>
+            <button type="button" class="chip" data-pro data-insert="[PAUSE 2]" title="Пауза точной длины в секундах">пауза 2 с</button>
+            <button type="button" class="chip" data-insert="[STOP]" title="Остановиться и ждать пробела">стоп</button>
+            <span class="sep" data-pro aria-hidden="true"></span>
+            <button type="button" class="chip" data-wrap="*|*" title="Выделить акцент"><span class="glyph glyph-emph">*</span>акцент</button>
+            <button type="button" class="chip" data-pro data-wrap="[SLOW] | [/SLOW]" title="Медленнее участок">медленнее</button>
+            <button type="button" class="chip" data-pro data-wrap="[FAST] | [/FAST]" title="Быстрее участок">быстрее</button>
+            <button type="button" class="chip" data-pro data-insert="[смотри в камеру]" title="Ремарка: видна над словом, не читается"><span class="glyph glyph-cue">[ ]</span>ремарка</button>
+            <button type="button" class="chip" data-pro data-line="# " title="Раздел: не показывается, по нему можно перейти"><span class="glyph glyph-sec">#</span>раздел</button>
+          </div>
 
-        <div class="editor" id="editorWrap">
-          <div class="editor-mirror" id="mirror" aria-hidden="true"></div>
-          <textarea id="text" spellcheck="true" aria-label="Текст выступления" placeholder="Вставьте текст выступления. Паузы: / // ///, акценты: *слово*, стоп: [STOP]"></textarea>
+          <div class="editor" id="editorWrap">
+            <div class="editor-mirror" id="mirror" aria-hidden="true"></div>
+            <textarea id="text" spellcheck="true" aria-label="Текст выступления" placeholder="Вставьте текст выступления. Паузы ставятся косыми чертами: / // ///, акценты звёздочками: *слово*"></textarea>
+          </div>
         </div>
 
         <details class="cheatsheet" id="cheatsheet">
-          <summary>Разметка текста</summary>
+          <summary>Как размечать текст</summary>
           <dl>
             <dt><code>/</code> <code>//</code> <code>///</code></dt><dd>Короткая, обычная и длинная пауза. То же словами: <code>[PAUSE-SHORT]</code> <code>[PAUSE]</code> <code>[PAUSE-LONG]</code></dd>
             <dt data-pro><code>[PAUSE 2.5]</code></dt><dd data-pro>Пауза точной длины в секундах</dd>
@@ -65,10 +67,15 @@
 
       <aside class="settings-col" aria-label="Настройки">
         <figure class="monitor" id="monitor" aria-label="Где на экране будет блок">
-          <div class="monitor-screen" id="monitorScreen">
-            <span class="cam" title="Камера"></span>
-            <div class="monitor-block" id="monitorBlock"><div class="monitor-word" id="monitorWord"></div></div>
+          <div class="monitor-body" id="monitorBody">
+            <span class="cam" aria-hidden="true"></span>
+            <span class="cam-led" aria-hidden="true"></span>
+            <div class="monitor-screen" id="monitorScreen">
+              <div class="monitor-block" id="monitorBlock"><div class="monitor-word" id="monitorWord"></div></div>
+              <button type="button" class="monitor-play" id="monitorPlay">Проверить темп</button>
+            </div>
           </div>
+          <div class="monitor-stand" aria-hidden="true"></div>
           <figcaption>Так блок встанет на вашем экране</figcaption>
         </figure>
 
@@ -76,7 +83,7 @@
           <legend>Темп</legend>
           <div class="duration" aria-live="polite">
             <span class="duration-label">Выступление займёт</span>
-            <span class="duration-value">≈&thinsp;<b id="durationValue">0:00</b></span>
+            <span class="duration-value"><span class="approx">≈</span><b id="durationValue">0:00</b></span>
             <span class="duration-note" id="durationNote"></span>
           </div>
           <label class="row"><span>Скорость</span><output id="wpmOut"></output>
@@ -87,7 +94,7 @@
             </div></div>
           <label class="row" data-pro><span>Паузы на знаках</span><output id="punctFactorOut"></output>
             <input type="range" id="punctFactor" min="0" max="2.5" step="0.1"></label>
-          <label class="check" data-pro><input type="checkbox" id="lengthAware"><span>Длинные слова дольше</span></label>
+          <label class="switch" data-pro><span>Длинные слова дольше</span><input type="checkbox" id="lengthAware"></label>
           <div class="row pauses" data-pro><span>Паузы, с</span>
             <label title="Короткая: /"><input type="number" id="pShort" min="0" max="10" step="0.1"><small>/</small></label>
             <label title="Обычная: //"><input type="number" id="pMedium" min="0" max="10" step="0.1"><small>//</small></label>
@@ -133,20 +140,20 @@
             <div class="seg" id="align" role="radiogroup" aria-label="Выравнивание">
               <button type="button" data-v="orp" title="Буква фокуса всегда в одной точке">По фокусу</button><button type="button" data-v="center">По центру</button>
             </div></div>
-          <label class="check"><input type="checkbox" id="guides"><span>Засечки над буквой фокуса</span></label>
-          <label class="check"><input type="checkbox" id="frame"><span>Рамка блока во время чтения</span></label>
-          <label class="check"><input type="checkbox" id="flip"><span>Зеркально (для суфлёра со стеклом)</span></label>
+          <label class="switch"><span>Засечки над буквой фокуса</span><input type="checkbox" id="guides"></label>
+          <label class="switch"><span>Рамка блока во время чтения</span><input type="checkbox" id="frame"></label>
+          <label class="switch"><span>Зеркально, для суфлёра со стеклом</span><input type="checkbox" id="flip"></label>
         </fieldset>
 
         <fieldset class="group">
           <legend>Запуск</legend>
-          <label class="check"><input type="checkbox" id="beep"><span>Бип на обратном отсчёте</span></label>
+          <label class="switch"><span>Бип на обратном отсчёте</span><input type="checkbox" id="beep"></label>
           <div class="row" data-pro><span>Обратный отсчёт</span>
             <div class="seg" id="countdown" role="radiogroup" aria-label="Обратный отсчёт">
               <button type="button" data-v="0">нет</button><button type="button" data-v="3">3 с</button><button type="button" data-v="5">5 с</button>
             </div></div>
-          <label class="check" data-pro><input type="checkbox" id="fullscreen"><span>Во весь экран</span></label>
-          <label class="check" data-pro><input type="checkbox" id="progress"><span>Полоска прогресса во время чтения</span></label>
+          <label class="switch" data-pro><span>Во весь экран</span><input type="checkbox" id="fullscreen"></label>
+          <label class="switch" data-pro><span>Полоска прогресса во время чтения</span><input type="checkbox" id="progress"></label>
           <button type="button" class="link" id="reset">Сбросить настройки</button>
         </fieldset>
       </aside>
