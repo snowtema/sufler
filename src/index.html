@@ -130,12 +130,17 @@
       </div>
       <div class="stats" id="stats" aria-live="polite"></div>
       <div class="actions">
-{{#en}}
-        <a class="lang-switch" id="langSwitch" href="/ru/" hreflang="ru" lang="ru" data-lang="ru" title="Русская версия">RU</a>
-{{/en}}
-{{#ru}}
-        <a class="lang-switch" id="langSwitch" href="/" hreflang="en" lang="en" data-lang="en" title="English version">EN</a>
-{{/ru}}
+        <div class="lang-menu" id="langMenu">
+          <button type="button" class="lang-trigger" id="langTrigger" aria-haspopup="menu" aria-expanded="false" aria-controls="langList" aria-label="{{Language: English||Язык: русский}}">
+            <svg class="lang-globe" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.5 3.7 5.5 3.7 9s-1.3 6.5-3.7 9c-2.4-2.5-3.7-5.5-3.7-9S9.6 5.5 12 3z"/></svg>
+            <span>{{EN||RU}}</span>
+            <svg class="lang-chevron" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+          </button>
+          <div class="lang-list" id="langList" role="menu" aria-labelledby="langTrigger" hidden>
+            <a role="menuitemradio" aria-checked="{{true||false}}" href="/" hreflang="en" lang="en" data-lang="en"><span class="lang-name">English</span><span class="lang-code">EN</span></a>
+            <a role="menuitemradio" aria-checked="{{false||true}}" href="/ru/" hreflang="ru" lang="ru" data-lang="ru"><span class="lang-name">Русский</span><span class="lang-code">RU</span></a>
+          </div>
+        </div>
         <button class="btn" id="startCursor" type="button" title="{{Start from the word under the cursor (⌘/Ctrl + Enter)||Начать со слова под курсором (⌘/Ctrl + Enter)}}">{{From cursor||С курсора}}</button>
         <button class="btn btn-rec" id="start" type="button"><span class="rec-dot" aria-hidden="true"></span>{{Start reading||Начать чтение}}</button>
       </div>
@@ -316,7 +321,7 @@
         <div><dt>Where does the video go?</dt><dd>Only to your computer. Recording happens in the browser, takes download to your Downloads folder, and nothing is uploaded.</dd></div>
         <div><dt>How do I put the text under the camera?</dt><dd>Pick the “Under camera” position or drag the word block while paused. Adjust the width and font size so your gaze barely leaves the lens.</dd></div>
       </dl>
-      <p class="about-meta">Made by <a href="https://artemslizhik.com/">Artem Slizhik</a>. Free, no sign-up, no ads. <a href="/ru/" hreflang="ru" lang="ru">Русская версия</a></p>
+      <p class="about-meta">Made by <a href="https://artemslizhik.com/">Artem Slizhik</a>. Free, no sign-up, no ads.</p>
 {{/en}}
 {{#ru}}
       <div class="about-intro">
@@ -329,7 +334,7 @@
         <div><dt>Куда сохраняется видео?</dt><dd>Только к вам на компьютер. Запись идёт в браузере, дубли скачиваются в «Загрузки», на сервер ничего не отправляется.</dd></div>
         <div><dt>Как поставить текст под камеру?</dt><dd>Выберите положение «Под камерой» или перетащите блок со словами мышью на паузе. Ширину блока и размер шрифта можно подобрать так, чтобы взгляд почти не отходил от объектива.</dd></div>
       </dl>
-      <p class="about-meta">Сделал <a href="https://artemslizhik.com/">Artem Slizhik</a>. Бесплатно, без регистрации и рекламы. <a href="/" hreflang="en" lang="en">English version</a></p>
+      <p class="about-meta">Сделал <a href="https://artemslizhik.com/">Artem Slizhik</a>. Бесплатно, без регистрации и рекламы.</p>
 {{/ru}}
     </footer>
   </div>

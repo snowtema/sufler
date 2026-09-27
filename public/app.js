@@ -175,7 +175,7 @@ Thanks for watching! [smile]`;
       const raw = localStorage.getItem(STORE);
       if (!raw) return;
       const data = JSON.parse(raw);
-      if (typeof data.text === 'string') text = data.text;
+      if (typeof data.text === 'string') text = data.text === DEMO_RU || data.text === DEMO_EN ? DEMO : data.text;
       if (data.settings) {
         S = Object.assign(structuredClone(DEFAULTS), data.settings);
         S.pauses = Object.assign({}, DEFAULTS.pauses, data.settings.pauses);
@@ -1286,6 +1286,44 @@ Thanks for watching! [smile]`;
     }
   }
 
+  // ——— Переключатель языка ———
+  function bindLangMenu() {
+    const trigger = $('langTrigger');
+    const list = $('langList');
+    const items = [...list.querySelectorAll('a')];
+    const open = (focusCurrent) => {
+      list.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      if (focusCurrent) (items.find((a) => a.getAttribute('aria-checked') === 'true') || items[0]).focus();
+    };
+    const close = (restoreFocus) => {
+      list.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) trigger.focus();
+    };
+    trigger.addEventListener('click', () => (list.hidden ? open(false) : close(false)));
+    trigger.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(true); }
+    });
+    list.addEventListener('keydown', (e) => {
+      const i = items.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus();
+      } else if (e.key === 'Escape') { e.preventDefault(); close(true); }
+      else if (e.key === 'Tab') close(false);
+    });
+    document.addEventListener('click', (e) => { if (!list.hidden && !e.target.closest('#langMenu')) close(false); });
+
+    // Любая ссылка на другую версию (меню, подвал) запоминает выбор — корень потом откроет нужный язык
+    for (const a of document.querySelectorAll('a[data-lang]')) {
+      a.addEventListener('click', (e) => {
+        if (a.dataset.lang === LANG) { e.preventDefault(); close(true); return; }
+        try { localStorage.setItem('sufler.lang', a.dataset.lang); } catch (_) { /* нет доступа */ }
+      });
+    }
+  }
+
   // ——— Запуск ———
   function init() {
     load();
@@ -1303,14 +1341,7 @@ Thanks for watching! [smile]`;
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); openStage(true); }
     });
     $('toolbar').addEventListener('click', onToolbar);
-    const langLink = $('langSwitch');
-    langLink.addEventListener('click', () => { try { localStorage.setItem('sufler.lang', langLink.dataset.lang); } catch (_) { /* нет доступа */ } });
-    let savedLang = null;
-    try { savedLang = localStorage.getItem('sufler.lang'); } catch (_) { /* нет доступа */ }
-    if (LANG === 'en' && !savedLang && (navigator.languages || [navigator.language]).some((l) => /^ru\b/i.test(l))) {
-      langLink.textContent = langLink.title;
-      langLink.classList.add('suggest');
-    }
+    bindLangMenu();
     $('start').addEventListener('click', () => openStage(false));
     $('startCursor').addEventListener('click', () => openStage(true));
     $('monitorPlay').addEventListener('click', () => (preview.frame ? stopPreview() : startPreview()));
