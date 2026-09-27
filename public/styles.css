@@ -218,6 +218,22 @@ code {
   background: var(--hl-cmd); color: var(--ink);
 }
 
+/* ——— О Суфлёре ——— */
+.about {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 20px 48px;
+  margin: 12px 28px 36px; padding: 32px 36px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+}
+.about h2 { margin: 0 0 12px; font: 600 20px/1.3 var(--display); letter-spacing: -0.02em; color: var(--ink); }
+.about-intro p { margin: 0; line-height: 1.6; max-width: 60ch; }
+.about-faq { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 20px 32px; }
+.about-faq dt { font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.about-faq dd { margin: 0; line-height: 1.55; color: var(--muted); }
+.about-faq div { min-width: 0; }
+.about-meta { grid-column: 1 / -1; margin: 8px 0 0; color: var(--muted); font-size: 13.5px; }
+.about-meta a { color: var(--ink-2); text-underline-offset: 3px; }
+
 /* ——— Панель настроек ——— */
 .settings-col {
   position: sticky; top: 74px;
@@ -666,6 +682,7 @@ kbd {
 
 /* ——— Узкие экраны ——— */
 @media (max-width: 960px) {
+  .about { grid-template-columns: 1fr; }
   .layout { grid-template-columns: 1fr; }
   .settings-col { position: static; max-height: none; }
   .sheet { min-height: 70vh; }
@@ -683,6 +700,8 @@ kbd {
   .cheatsheet dd { margin-bottom: 8px; }
   .hud-keys { display: none; }
   .take { grid-template-columns: 1fr; }
+  .about { margin: 8px 12px 24px; padding: 24px 4px; }
+  .about-faq { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

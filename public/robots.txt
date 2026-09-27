@@ -1,0 +1,19 @@
+# Суфлёр открыт для всех поисковых систем и AI-ассистентов
+User-agent: *
+Allow: /
+
+# Явно разрешаем AI-поиск и ассистентов, чтобы Суфлёр могли находить и цитировать
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: YandexAdditional
+Allow: /
+
+Sitemap: https://sufler.artemslizhik.com/sitemap.xml

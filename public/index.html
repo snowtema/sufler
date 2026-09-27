@@ -3,8 +3,57 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Суфлёр</title>
-  <meta name="description" content="Суфлёр для записи видео: слова по одному в одной точке экрана, темп и паузы задаются разметкой в тексте.">
+  <title>Суфлёр — онлайн-телесуфлёр для записи видео у камеры</title>
+  <meta name="description" content="Бесплатный онлайн-телесуфлёр: текст показывается по одному слову прямо под камерой, паузы и акценты задаются разметкой, видео пишется в браузере.">
+  <link rel="canonical" href="https://sufler.artemslizhik.com/">
+  <meta name="author" content="Artem Slizhik">
+  <meta name="theme-color" content="#e4e7eb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Суфлёр">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:url" content="https://sufler.artemslizhik.com/">
+  <meta property="og:title" content="Суфлёр — читайте с экрана и смотрите в камеру">
+  <meta property="og:description" content="Онлайн-телесуфлёр: слова по одному прямо под камерой, паузы и акценты разметкой в тексте, запись видео в браузере. Бесплатно, без регистрации.">
+  <meta property="og:image" content="https://sufler.artemslizhik.com/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Суфлёр: монитор с камерой, на экране слово «Привет» с красной буквой фокуса">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Суфлёр — читайте с экрана и смотрите в камеру">
+  <meta name="twitter:description" content="Онлайн-телесуфлёр: слова по одному прямо под камерой, паузы и акценты разметкой в тексте, запись видео в браузере.">
+  <meta name="twitter:image" content="https://sufler.artemslizhik.com/og.png">
+  <link rel="alternate" type="text/plain" href="https://sufler.artemslizhik.com/llms.txt" title="llms.txt">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Суфлёр",
+    "alternateName": ["Sufler", "Онлайн-телесуфлёр Суфлёр"],
+    "url": "https://sufler.artemslizhik.com/",
+    "image": "https://sufler.artemslizhik.com/og.png",
+    "description": "Бесплатный онлайн-телесуфлёр для записи видео. Показывает текст по одному слову в одной точке экрана, прямо под камерой, чтобы при чтении взгляд не уходил от объектива. Паузы, акценты и скорость задаются разметкой в тексте, видео с камеры записывается прямо в браузере.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Любой современный браузер",
+    "browserRequirements": "Требуется JavaScript. Для записи видео — доступ к камере и микрофону.",
+    "inLanguage": "ru",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "featureList": [
+      "Показ текста по одному слову в фиксированной точке под камерой",
+      "Скорость в словах в минуту и оценка длительности выступления",
+      "Разметка темпа: паузы, акценты, замедление и ускорение, стопы, ремарки, разделы",
+      "Автоматическая разметка текста промптом для любой нейросети или скиллом для Claude",
+      "Запись видео с камеры и микрофона в браузере без сервера",
+      "Камера фоном под текстом, зеркальный режим для суфлёра со стеклом"
+    ],
+    "creator": { "@type": "Person", "name": "Artem Slizhik", "url": "https://artemslizhik.com/" }
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600&family=Golos+Text:wght@400;600;700&family=PT+Serif:wght@400;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
@@ -184,6 +233,20 @@
         </fieldset>
       </aside>
     </main>
+
+    <footer class="about" id="about">
+      <div class="about-intro">
+        <h2>Что такое Суфлёр</h2>
+        <p>Суфлёр — бесплатный онлайн-телесуфлёр для записи видео. Он показывает текст выступления по одному слову в одной точке экрана, прямо под камерой, поэтому глаза не бегают по строчкам и взгляд остаётся в объективе. Скорость, паузы и акценты задаются разметкой в тексте, а видео с камеры можно записать тут же, в браузере. Регистрация не нужна: текст и настройки хранятся только у вас.</p>
+      </div>
+      <dl class="about-faq">
+        <div><dt>Как расставить паузы и акценты?</dt><dd>Косые черты <code>/</code> <code>//</code> <code>///</code> дают короткую, обычную и длинную паузу, <code>*слово*</code> выделяет акцент, <code>[STOP]</code> останавливает чтение до пробела. Знаки препинания и пустые строки добавляют паузы сами.</dd></div>
+        <div><dt>Можно ли разметить текст автоматически?</dt><dd>Да. В окне «Разметить автоматически» есть готовый промпт для ChatGPT, Gemini, Claude и других нейросетей и скилл для Claude, который ещё и проверяет результат.</dd></div>
+        <div><dt>Куда сохраняется видео?</dt><dd>Только к вам на компьютер. Запись идёт в браузере, дубли скачиваются в «Загрузки», на сервер ничего не отправляется.</dd></div>
+        <div><dt>Как поставить текст под камеру?</dt><dd>Выберите положение «Под камерой» или перетащите блок со словами мышью на паузе. Ширину блока и размер шрифта можно подобрать так, чтобы взгляд почти не отходил от объектива.</dd></div>
+      </dl>
+      <p class="about-meta">Сделал <a href="https://artemslizhik.com/">Artem Slizhik</a>. Бесплатно, без регистрации и рекламы.</p>
+    </footer>
   </div>
 
   <!-- Автоматическая разметка: промпт для любой нейросети или скилл для Claude -->

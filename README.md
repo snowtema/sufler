@@ -35,6 +35,20 @@ npx wrangler dev
 - Формат MP4, если браузер умеет, иначе WebM. Качество в режиме «Про»: 720p, 1080p или 4K.
 - Дубли хранятся только в открытой вкладке. Если закрыть её с нескачанными дублями, браузер предупредит.
 
+## SEO и GEO
+
+- `public/index.html` — title, description, canonical, Open Graph и Twitter, JSON-LD `WebApplication`, блок «Что такое Суфлёр» с короткими ответами (текст есть прямо в HTML, его видят краулеры без JavaScript).
+- `public/robots.txt` — открыт для всех, AI-поиск и ассистенты разрешены явно.
+- `public/llms.txt` — описание для нейросетей по стандарту llms.txt.
+- `llms-full.txt` и `sitemap.xml` собираются при деплое (`scripts/build.mjs`): полная справка берётся из промпта в `index.html`, в sitemap — дата сборки.
+- `public/og.png` — картинка для превью ссылок, исходник `scripts/og.html`. Перерисовать:
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+  --force-device-scale-factor=1 --window-size=1200,630 --virtual-time-budget=8000 \
+  --screenshot="$PWD/public/og.png" "file://$PWD/scripts/og.html"
+```
+
 ## Файлы
 
 - `public/parser.js` — разбор разметки в последовательность кадров и расчёт длительности

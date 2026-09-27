@@ -2,3 +2,5 @@
 node_modules/
 .wrangler/
 public/sufler-markup.zip
+public/llms-full.txt
+public/sitemap.xml
