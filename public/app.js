@@ -14,9 +14,10 @@
     guides: true, frame: false, flip: false,
     countdown: 3, fullscreen: true, progress: false,
     beep: true, mode: 'simple',
+    record: false, camId: '', micId: '', recQuality: '1080', selfView: false,
   };
   // Что настраивается в простом режиме; остальное там берётся из DEFAULTS
-  const SIMPLE_KEYS = ['mode', 'wpm', 'fontSize', 'width', 'posX', 'posY', 'beep'];
+  const SIMPLE_KEYS = ['mode', 'wpm', 'fontSize', 'width', 'posX', 'posY', 'beep', 'record', 'camId', 'micId', 'selfView'];
   const POS_PRESETS = { camera: [50, 16], center: [50, 50] };
 
   const DEMO = `# Вступление
@@ -190,8 +191,8 @@
     posX: (v) => `${v} %`,
     posY: (v) => `${v} %`,
   };
-  const CHECKS = ['lengthAware', 'guides', 'frame', 'flip', 'fullscreen', 'progress', 'beep'];
-  const SEGS = { mode: String, chunk: Number, weight: Number, theme: String, align: String, countdown: Number };
+  const CHECKS = ['lengthAware', 'guides', 'frame', 'flip', 'fullscreen', 'progress', 'beep', 'record', 'selfView'];
+  const SEGS = { mode: String, chunk: Number, weight: Number, theme: String, align: String, countdown: Number, recQuality: String };
   const PAUSE_INPUTS = { pShort: 'short', pMedium: 'medium', pLong: 'long' };
 
   function setFill(input) {
@@ -220,6 +221,7 @@
       b.setAttribute('aria-checked', String(S.posX === x && S.posY === y));
     }
     document.body.dataset.mode = S.mode;
+    document.body.dataset.record = S.record;
   }
 
   function onSettingsChange() {
@@ -351,6 +353,7 @@
     const sw = window.screen.width || 1920, sh = window.screen.height || 1080;
     scr.style.aspectRatio = `${sw} / ${sh}`;
     scr.dataset.theme = C.theme;
+    attachCam($('monitorCam'), scr);
     const k = scr.clientWidth / sw;
     if (!k) return;
     const b = $('monitorBlock');
@@ -461,6 +464,7 @@
     stage.dataset.align = C.align;
     stage.dataset.frame = C.frame;
     stage.dataset.progress = C.progress;
+    attachCam($('stageCam'), stage);
     block.style.left = C.posX + '%';
     block.style.top = C.posY + '%';
     block.style.width = C.width + 'px';
@@ -520,6 +524,7 @@
   function tick(now) {
     const dt = Math.min(1100, now - lastNow);
     lastNow = now;
+    if (rec.current) $('recTime').textContent = fmtClock(recElapsed());
 
     if (state === 'countdown') {
       countdownLeft -= dt;
@@ -548,6 +553,7 @@
 
   function startPlayback(withCountdown) {
     navigated = false;
+    if (C.record && rec.stream) { if (rec.current) resumeTake(); else startTake(); }
     frameElapsed = withCountdown ? 0 : frameElapsed;
     if (withCountdown && C.countdown > 0) {
       countdownLeft = C.countdown * 1000;
@@ -563,12 +569,14 @@
   }
 
   function pause() {
+    pauseTake();
     if (state === 'countdown') frameElapsed = 0;
     setState('paused');
     renderFrame();
   }
 
   function finish() {
+    stopTake();
     idx = frames.length - 1;
     frameElapsed = P.frameMs(frames[idx], C);
     setState('ended');
@@ -588,6 +596,7 @@
   }
 
   function restart() {
+    stopTake(); // перезапуск с начала — новый дубль
     idx = 0;
     playClock = 0;
     cueUntil = -1;
@@ -641,7 +650,10 @@
     const f = frames[idx];
     const passed = cum[idx] + frameElapsed;
     const left = (cum[frames.length] || 0) - passed;
-    $('hudWhere').innerHTML = `<span>Слово ${Math.min(totalWords, wordIdx[idx] + 1)} из ${totalWords}</span>&emsp;<span>осталось ${fmtClock(left)}</span>&emsp;<span>${C.wpm} сл/мин</span>`;
+    let recNote = '';
+    if (rec.current) recNote = `&emsp;<span class="hud-rec">Запись на паузе, ${fmtClock(recElapsed())}</span>`;
+    else if (state === 'ended' && rec.takes.length > rec.takesAtOpen) recNote = '&emsp;<span class="hud-rec">Дубль записан</span>';
+    $('hudWhere').innerHTML = `<span>Слово ${Math.min(totalWords, wordIdx[idx] + 1)} из ${totalWords}</span>&emsp;<span>осталось ${fmtClock(left)}</span>&emsp;<span>${C.wpm} сл/мин</span>${recNote}`;
 
     const p = getParsed();
     $('hudSections').innerHTML = p.sections.map((s, i) =>
@@ -679,8 +691,13 @@
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (_) { wakeLock = null; }
   }
 
-  function openStage(fromCursor) {
+  async function openStage(fromCursor) {
     if (preview.frame) stopPreview();
+    let recFailed = null;
+    if (C.record && getParsed().wordCount) {
+      try { await getStream(); } catch (err) { recFailed = err; }
+    }
+    rec.takesAtOpen = rec.takes.length;
     const p = getParsed();
     frames = P.buildFrames(p, C.chunk);
     if (!p.wordCount) { ta.focus(); updateStats(); return; }
@@ -702,6 +719,7 @@
     if (C.fullscreen && !document.fullscreenElement && stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
     requestWakeLock();
     startPlayback(true);
+    if (recFailed) toast(`Камера недоступна, читаем без записи: ${recErrorText(recFailed)}`);
     lastNow = performance.now();
     stopLoop();
     const loop = (now) => { raf = requestAnimationFrame(loop); tick(now); };
@@ -717,6 +735,14 @@
 
   function closeStage() {
     stopLoop();
+    if (rec.current) {
+      // Дубль дописывается асинхронно — окно с ним откроется, когда файл будет готов
+      rec.showOnFinalize = true;
+      stopTake().then(() => { if (!rec.previewWanted) releaseStream(); });
+    } else {
+      if (!rec.previewWanted) releaseStream();
+      if (rec.takes.length > rec.takesAtOpen) openTakes();
+    }
     state = 'idle';
     stage.hidden = true;
     document.body.style.overflow = '';
@@ -826,6 +852,268 @@
     });
   }
 
+  // ——— Запись видео: всё в браузере (getUserMedia + MediaRecorder), файлы скачиваются локально ———
+  const QUALITY = { 720: [1280, 720, 5e6], 1080: [1920, 1080, 10e6], 2160: [3840, 2160, 30e6] };
+  const rec = { stream: null, current: null, takes: [], counter: 0, mime: null, previewWanted: false, takesAtOpen: 0, showOnFinalize: false, meter: null };
+  const canRecord = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+
+  function pickMime() {
+    const list = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    return list.find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  }
+
+  function recErrorText(err) {
+    if (err && err.name === 'NotAllowedError') return 'доступ к камере запрещён в настройках браузера';
+    if (err && err.name === 'NotFoundError') return 'камера или микрофон не найдены';
+    if (err && err.name === 'NotReadableError') return 'камера занята другим приложением';
+    return (err && err.message) || 'неизвестная ошибка';
+  }
+
+  function showRecError(err) {
+    const el = $('recError');
+    el.hidden = !err;
+    el.textContent = err ? `Не удалось включить камеру: ${recErrorText(err)}.` : '';
+  }
+
+  async function getStream() {
+    if (rec.stream) return rec.stream;
+    const [w, h] = QUALITY[C.recQuality] || QUALITY[1080];
+    const video = { width: { ideal: w }, height: { ideal: h }, frameRate: { ideal: 30 } };
+    const audio = {};
+    if (C.camId) video.deviceId = { exact: C.camId };
+    if (C.micId) audio.deviceId = { exact: C.micId };
+    try {
+      rec.stream = await navigator.mediaDevices.getUserMedia({ video, audio: C.micId ? audio : true });
+    } catch (err) {
+      if (err.name !== 'OverconstrainedError' && err.name !== 'NotFoundError') { showRecError(err); throw err; }
+      // Выбранное устройство отключили — берём устройства по умолчанию
+      delete video.deviceId;
+      try { rec.stream = await navigator.mediaDevices.getUserMedia({ video, audio: true }); } catch (err2) { showRecError(err2); throw err2; }
+    }
+    showRecError(null);
+    const v = $('camVideo');
+    v.srcObject = rec.stream;
+    v.play().catch(() => {});
+    startMeter();
+    await fillDevices();
+    renderRecUI();
+    return rec.stream;
+  }
+
+  function releaseStream() {
+    stopMeter();
+    if (rec.stream) rec.stream.getTracks().forEach((t) => t.stop());
+    rec.stream = null;
+    $('camVideo').srcObject = null;
+    renderRecUI();
+  }
+
+  async function fillDevices() {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const fill = (sel, kind, trackKind, current, fallback) => {
+      const list = devices.filter((d) => d.kind === kind && d.deviceId);
+      if (!list.length) return;
+      sel.innerHTML = list.map((d, i) => `<option value="${esc(d.deviceId)}">${esc(d.label || `${fallback} ${i + 1}`)}</option>`).join('');
+      const track = rec.stream && rec.stream.getTracks().find((t) => t.kind === trackKind);
+      const ids = list.map((d) => d.deviceId);
+      sel.value = [track && track.getSettings().deviceId, current, ids[0]].find((id) => id && ids.includes(id));
+    };
+    fill($('camSelect'), 'videoinput', 'video', C.camId, 'Камера');
+    fill($('micSelect'), 'audioinput', 'audio', C.micId, 'Микрофон');
+  }
+
+  function startMeter() {
+    stopMeter();
+    if (!rec.stream.getAudioTracks().length) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      ctx.createMediaStreamSource(rec.stream).connect(analyser);
+      const buf = new Uint8Array(analyser.fftSize);
+      const bar = $('micLevel');
+      const loop = () => {
+        analyser.getByteTimeDomainData(buf);
+        let peak = 0;
+        for (const v of buf) peak = Math.max(peak, Math.abs(v - 128));
+        bar.style.transform = `scaleX(${Math.min(1, peak / 80)})`;
+        rec.meter.raf = requestAnimationFrame(loop);
+      };
+      rec.meter = { ctx, raf: requestAnimationFrame(loop) };
+    } catch (_) { rec.meter = null; }
+  }
+
+  function stopMeter() {
+    if (rec.meter) { cancelAnimationFrame(rec.meter.raf); rec.meter.ctx.close().catch(() => {}); rec.meter = null; }
+    $('micLevel').style.transform = 'scaleX(0)';
+  }
+
+  function startTake() {
+    if (!rec.stream) return;
+    if (rec.mime === null) rec.mime = pickMime();
+    const bps = (QUALITY[C.recQuality] || QUALITY[1080])[2];
+    let recorder;
+    try { recorder = new MediaRecorder(rec.stream, rec.mime ? { mimeType: rec.mime, videoBitsPerSecond: bps } : { videoBitsPerSecond: bps }); }
+    catch (_) { recorder = new MediaRecorder(rec.stream); }
+    const take = { recorder, chunks: [], n: ++rec.counter, date: new Date(), elapsed: 0, since: performance.now() };
+    recorder.ondataavailable = (e) => { if (e.data && e.data.size) take.chunks.push(e.data); };
+    take.done = new Promise((resolve) => { recorder.onstop = () => { finalizeTake(take); resolve(); }; });
+    recorder.start(1000); // куски по секунде: при сбое вкладки не теряется всё
+    rec.current = take;
+    renderRecBadge();
+  }
+
+  function pauseTake() {
+    const t = rec.current;
+    if (t && t.recorder.state === 'recording') { t.recorder.pause(); t.elapsed += performance.now() - t.since; }
+    renderRecBadge();
+  }
+
+  function resumeTake() {
+    const t = rec.current;
+    if (t && t.recorder.state === 'paused') { t.recorder.resume(); t.since = performance.now(); }
+    renderRecBadge();
+  }
+
+  function stopTake() {
+    const t = rec.current;
+    if (!t) return Promise.resolve();
+    if (t.recorder.state === 'recording') t.elapsed += performance.now() - t.since;
+    rec.current = null;
+    if (t.recorder.state !== 'inactive') t.recorder.stop();
+    renderRecBadge();
+    return t.done;
+  }
+
+  function recElapsed() {
+    const t = rec.current;
+    if (!t) return 0;
+    return t.elapsed + (t.recorder.state === 'recording' ? performance.now() - t.since : 0);
+  }
+
+  function finalizeTake(take) {
+    const type = take.recorder.mimeType || rec.mime || 'video/webm';
+    const blob = new Blob(take.chunks, { type });
+    if (blob.size) {
+      const ext = type.includes('mp4') ? 'mp4' : 'webm';
+      const d = take.date;
+      const two = (x) => String(x).padStart(2, '0');
+      const stamp = `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}_${two(d.getHours())}-${two(d.getMinutes())}`;
+      rec.takes.push({ n: take.n, url: URL.createObjectURL(blob), size: blob.size, duration: take.elapsed, ext, name: `sufler-take-${take.n}_${stamp}.${ext}`, saved: false });
+      renderTakes();
+    }
+    if (rec.showOnFinalize) { rec.showOnFinalize = false; if (rec.takes.length > rec.takesAtOpen) openTakes(); }
+  }
+
+  function renderRecBadge() {
+    const t = rec.current;
+    stage.dataset.rec = t ? t.recorder.state : '';
+    $('recTime').textContent = fmtClock(recElapsed());
+  }
+
+  /** Показывает камеру фоном под текстом, если включено «Видеть себя». */
+  function attachCam(video, host) {
+    const want = C.record && C.selfView && rec.stream ? rec.stream : null;
+    host.dataset.selfview = String(!!want);
+    if (video.srcObject !== want) {
+      video.srcObject = want;
+      if (want) video.play().catch(() => {});
+    }
+  }
+
+  function renderRecUI() {
+    renderMonitor();
+    if (!stage.hidden) attachCam($('stageCam'), stage);
+    const on = !!rec.stream;
+    $('camPreview').classList.toggle('on', on);
+    $('camToggle').textContent = on ? 'Выключить камеру' : 'Включить камеру';
+  }
+
+  const fmtSize = (b) => {
+    const mb = b / 1048576;
+    if (mb < 1) return `${Math.max(1, Math.round(b / 1024))} КБ`;
+    return mb >= 10 ? `${Math.round(mb)} МБ` : `${mb.toFixed(1).replace('.', ',')} МБ`;
+  };
+
+  function takeMeta(t) {
+    return `${fmtClock(t.duration)}, ${fmtSize(t.size)}, ${t.ext.toUpperCase()}${t.saved ? ', скачан' : ''}`;
+  }
+
+  function renderTakes() {
+    const btn = $('takesOpen');
+    btn.disabled = !rec.takes.length;
+    btn.textContent = rec.takes.length ? `Дубли: ${rec.takes.length}` : 'Дублей пока нет';
+    const list = $('takesList');
+    if (!rec.takes.length) { list.innerHTML = '<li class="takes-empty">Пока пусто. Включите запись и начните чтение.</li>'; return; }
+    list.innerHTML = rec.takes.slice().reverse().map((t) => `
+      <li class="take" data-n="${t.n}">
+        <video src="${t.url}" controls preload="metadata" playsinline></video>
+        <div class="take-info">
+          <b>Дубль ${t.n}</b>
+          <span class="take-meta">${takeMeta(t)}</span>
+          <div class="take-actions">
+            <a class="btn btn-dark btn-small" href="${t.url}" download="${esc(t.name)}" data-save>Скачать</a>
+            <button type="button" class="btn btn-small" data-delete>Удалить</button>
+          </div>
+        </div>
+      </li>`).join('');
+  }
+
+  function openTakes() {
+    renderTakes();
+    const d = $('takesDialog');
+    if (!d.open) d.showModal();
+  }
+
+  function onTakesClick(e) {
+    const li = e.target.closest('.take');
+    if (!li) return;
+    const t = rec.takes.find((x) => x.n === Number(li.dataset.n));
+    if (!t) return;
+    if (e.target.closest('[data-save]')) {
+      t.saved = true;
+      li.querySelector('.take-meta').textContent = takeMeta(t);
+    } else if (e.target.closest('[data-delete]')) {
+      const b = e.target.closest('[data-delete]');
+      // Удаление без возврата: подтверждаем вторым нажатием
+      if (!b.classList.contains('confirm')) {
+        b.classList.add('confirm');
+        b.textContent = 'Точно удалить?';
+        setTimeout(() => { b.classList.remove('confirm'); b.textContent = 'Удалить'; }, 3000);
+        return;
+      }
+      URL.revokeObjectURL(t.url);
+      rec.takes = rec.takes.filter((x) => x !== t);
+      renderTakes();
+    }
+  }
+
+  function bindRecording() {
+    if (!canRecord) {
+      $('record').disabled = true;
+      $('record').closest('.switch').title = 'Этот браузер не умеет записывать видео';
+    }
+    $('record').addEventListener('change', () => {
+      if (S.record) { rec.previewWanted = true; getStream().catch(() => {}); } else { rec.previewWanted = false; releaseStream(); showRecError(null); }
+    });
+    $('camToggle').addEventListener('click', () => {
+      if (rec.stream) { rec.previewWanted = false; releaseStream(); } else { rec.previewWanted = true; getStream().catch(() => {}); }
+    });
+    const restartStream = () => { if (rec.stream && !rec.current) { releaseStream(); getStream().catch(() => {}); } };
+    $('camSelect').addEventListener('change', () => { S.camId = $('camSelect').value; onSettingsChange(); restartStream(); });
+    $('micSelect').addEventListener('change', () => { S.micId = $('micSelect').value; onSettingsChange(); restartStream(); });
+    $('recQuality').addEventListener('click', (e) => { if (e.target.closest('button')) restartStream(); });
+    if (navigator.mediaDevices) navigator.mediaDevices.addEventListener('devicechange', () => { if (rec.stream) fillDevices(); });
+    $('takesOpen').addEventListener('click', openTakes);
+    $('takesList').addEventListener('click', onTakesClick);
+    // Нескачанные дубли пропадут вместе со вкладкой — предупреждаем
+    window.addEventListener('beforeunload', (e) => {
+      if (rec.current || rec.takes.some((t) => !t.saved)) { e.preventDefault(); e.returnValue = ''; }
+    });
+    renderTakes();
+  }
+
   // ——— Промпт для любой нейросети ———
   const PROMPT_PLACEHOLDER = 'ВСТАВЬТЕ СЮДА ТЕКСТ ВЫСТУПЛЕНИЯ';
 
@@ -900,9 +1188,12 @@
       });
     }
     bindPromptDialog();
-    skillDialog.querySelector('[data-dialog-close]').addEventListener('click', () => skillDialog.close());
-    // Клик по затемнению вокруг окна закрывает его
-    skillDialog.addEventListener('click', (e) => { if (e.target === skillDialog) skillDialog.close(); });
+    for (const d of document.querySelectorAll('dialog.dialog')) {
+      d.querySelector('[data-dialog-close]').addEventListener('click', () => d.close());
+      // Клик по затемнению вокруг окна закрывает его
+      d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+    }
+    bindRecording();
 
     new ResizeObserver(() => { renderMonitor(); renderMirror(); }).observe($('monitorScreen'));
     new ResizeObserver(() => { mirror.scrollTop = ta.scrollTop; }).observe(ta);

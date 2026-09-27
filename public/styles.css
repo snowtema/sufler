@@ -359,6 +359,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px 
   aspect-ratio: 16 / 10;
   border-radius: 3px;
   overflow: hidden;
+  isolation: isolate;
   background: var(--bg); color: var(--fg);
 }
 .monitor-block {
@@ -391,6 +392,61 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px 
   width: 132px; height: 5px; border-radius: 3px;
   background: var(--metal);
 }
+
+/* ——— Запись видео ——— */
+.rec-body { display: flex; flex-direction: column; gap: 13px; }
+body:not([data-record="true"]) .rec-body { display: none; }
+.cam-preview {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r-card);
+  overflow: hidden;
+  background: #0d0f12;
+}
+.cam-preview video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
+.cam-preview.on video { display: block; }
+.cam-preview-btn {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  height: 32px; padding: 0 14px;
+  border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1); color: #fff;
+  font-size: 13px; white-space: nowrap;
+}
+.cam-preview-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.cam-preview.on .cam-preview-btn { left: auto; top: auto; right: 8px; bottom: 18px; transform: none; height: 26px; padding: 0 10px; font-size: 12px; backdrop-filter: blur(6px); }
+.mic-meter { position: absolute; left: 10px; right: 10px; bottom: 7px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.2); overflow: hidden; display: none; }
+.cam-preview.on .mic-meter { display: block; }
+.mic-meter i { display: block; height: 100%; background: #3ddc84; transform-origin: left center; transform: scaleX(0); transition: transform 0.06s linear; }
+.rec-error { margin: 0; color: var(--c-emph); font-size: 13px; line-height: 1.4; }
+.row select { max-width: 210px; text-overflow: ellipsis; }
+.btn-small { height: 32px; padding: 0 14px; font-size: 13.5px; align-self: flex-start; }
+.btn-small:disabled { opacity: 0.5; cursor: default; }
+.btn-small:disabled:hover { border-color: var(--line); }
+
+/* Себя за текстом: камера как зеркало, приглушённая цветом темы */
+.cam-layer { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
+[data-selfview="true"] > .cam-layer { display: block; }
+[data-selfview="true"]::after {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: color-mix(in srgb, var(--bg) 42%, transparent);
+}
+.monitor-screen[data-selfview="true"] > :not(.cam-layer),
+.stage[data-selfview="true"] > :not(.cam-layer) { z-index: 1; }
+.stage[data-selfview="true"] .word,
+.monitor-screen[data-selfview="true"] .monitor-word { text-shadow: 0 1px 2px color-mix(in srgb, var(--bg) 70%, transparent), 0 0 18px color-mix(in srgb, var(--bg) 55%, transparent); }
+
+/* Список дублей */
+.dialog-wide { width: min(760px, calc(100% - 32px)); }
+.takes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.take { display: grid; grid-template-columns: 260px 1fr; gap: 16px; align-items: center; padding: 12px; border-radius: var(--r-card); background: var(--chip); }
+.take video { width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; background: #000; }
+.take-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.take-info b { font-weight: 600; }
+.take-info span { color: var(--muted); font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.take-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.take-actions .btn { text-decoration: none; }
+.take-actions .confirm { border-color: var(--c-emph); color: var(--c-emph); }
+.takes-empty { color: var(--muted); padding: 8px 0; }
 
 /* ——— Автоматическая разметка ——— */
 .auto-link, .inline-link {
@@ -542,6 +598,18 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px 
 }
 .toast.on { opacity: 1; }
 
+.rec-badge {
+  position: absolute; left: 18px; bottom: 16px;
+  display: none; align-items: center; gap: 7px;
+  color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums;
+}
+.rec-badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--pivot); }
+.stage[data-rec="recording"] .rec-badge,
+.stage[data-rec="paused"] .rec-badge { display: flex; }
+.stage[data-rec="paused"] .rec-badge i { background: var(--dim); }
+.stage[data-state="paused"] .rec-badge,
+.stage[data-state="ended"] .rec-badge { display: none; }
+
 /* Панель на паузе */
 .hud { position: absolute; inset: 0; pointer-events: none; display: none; }
 .stage[data-state="paused"] .hud,
@@ -614,6 +682,7 @@ kbd {
   .cheatsheet dl { grid-template-columns: 1fr; gap: 2px; }
   .cheatsheet dd { margin-bottom: 8px; }
   .hud-keys { display: none; }
+  .take { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

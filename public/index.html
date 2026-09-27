@@ -73,6 +73,7 @@
             <span class="cam" aria-hidden="true"></span>
             <span class="cam-led" aria-hidden="true"></span>
             <div class="monitor-screen" id="monitorScreen">
+              <video class="cam-layer" id="monitorCam" muted playsinline></video>
               <div class="monitor-block" id="monitorBlock"><div class="monitor-word" id="monitorWord"></div></div>
               <button type="button" class="monitor-play" id="monitorPlay">Проверить темп</button>
             </div>
@@ -119,6 +120,28 @@
           <label class="row" data-pro><span>По вертикали</span><output id="posYOut"></output>
             <input type="range" id="posY" min="0" max="100" step="1"></label>
           <p class="hint">На паузе блок можно перетащить мышью, а ширину менять за края.</p>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>Запись видео</legend>
+          <label class="switch"><span>Записывать видео с камеры</span><input type="checkbox" id="record"></label>
+          <div class="rec-body" id="recBody">
+            <div class="cam-preview" id="camPreview">
+              <video id="camVideo" muted playsinline></video>
+              <button type="button" class="cam-preview-btn" id="camToggle">Включить камеру</button>
+              <div class="mic-meter" title="Уровень микрофона"><i id="micLevel"></i></div>
+            </div>
+            <p class="rec-error" id="recError" hidden></p>
+            <label class="switch"><span>Видеть себя за текстом</span><input type="checkbox" id="selfView"></label>
+            <label class="row"><span>Камера</span><select id="camSelect"><option value="">По умолчанию</option></select></label>
+            <label class="row"><span>Микрофон</span><select id="micSelect"><option value="">По умолчанию</option></select></label>
+            <div class="row" data-pro><span>Качество</span>
+              <div class="seg" id="recQuality" role="radiogroup" aria-label="Качество видео">
+                <button type="button" data-v="720">720p</button><button type="button" data-v="1080">1080p</button><button type="button" data-v="2160">4K</button>
+              </div></div>
+            <p class="hint">Видео пишется прямо в браузере и никуда не отправляется. Каждый запуск чтения — отдельный дубль, на паузе запись тоже встаёт на паузу.</p>
+            <button type="button" class="btn btn-small" id="takesOpen" disabled>Дублей пока нет</button>
+          </div>
         </fieldset>
 
         <fieldset class="group" data-pro>
@@ -238,8 +261,19 @@
     </div>
   </dialog>
 
+  <!-- Записанные дубли -->
+  <dialog class="dialog dialog-wide" id="takesDialog" aria-labelledby="takesTitle">
+    <div class="dialog-body">
+      <button type="button" class="dialog-close" data-dialog-close aria-label="Закрыть"></button>
+      <h2 id="takesTitle">Дубли</h2>
+      <p class="dialog-lead">Дубли хранятся только в этой вкладке. Скачайте нужные, пока не закрыли страницу: файлы попадут в папку «Загрузки».</p>
+      <ol class="takes" id="takesList"></ol>
+    </div>
+  </dialog>
+
   <!-- Сцена чтения -->
   <div class="stage" id="stage" hidden>
+    <video class="cam-layer" id="stageCam" muted playsinline></video>
     <div class="stage-inner" id="stageInner">
       <div class="block" id="block">
         <div class="cue" id="cue"></div>
@@ -255,6 +289,7 @@
     </div>
 
     <div class="stage-progress" id="stageProgress"><i></i></div>
+    <div class="rec-badge" id="recBadge" aria-hidden="true"><i></i><span id="recTime">0:00</span></div>
     <div class="toast" id="toast" role="status"></div>
 
     <div class="hud" id="hud">
