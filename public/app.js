@@ -14,10 +14,10 @@
     guides: true, frame: false, flip: false,
     countdown: 3, fullscreen: true, progress: false,
     beep: true, mode: 'simple',
-    record: false, camId: '', micId: '', recQuality: '1080', selfView: false,
+    record: false, camId: '', micId: '', recQuality: '1080', selfView: false, recPause: false,
   };
   // Что настраивается в простом режиме; остальное там берётся из DEFAULTS
-  const SIMPLE_KEYS = ['mode', 'wpm', 'fontSize', 'width', 'posX', 'posY', 'beep', 'record', 'camId', 'micId', 'selfView'];
+  const SIMPLE_KEYS = ['mode', 'wpm', 'fontSize', 'width', 'posX', 'posY', 'beep', 'record', 'camId', 'micId', 'selfView', 'recPause'];
   const POS_PRESETS = { camera: [50, 16], center: [50, 50] };
 
   const DEMO = `# Вступление
@@ -191,7 +191,7 @@
     posX: (v) => `${v} %`,
     posY: (v) => `${v} %`,
   };
-  const CHECKS = ['lengthAware', 'guides', 'frame', 'flip', 'fullscreen', 'progress', 'beep', 'record', 'selfView'];
+  const CHECKS = ['lengthAware', 'guides', 'frame', 'flip', 'fullscreen', 'progress', 'beep', 'record', 'selfView', 'recPause'];
   const SEGS = { mode: String, chunk: Number, weight: Number, theme: String, align: String, countdown: Number, recQuality: String };
   const PAUSE_INPUTS = { pShort: 'short', pMedium: 'medium', pLong: 'long' };
 
@@ -524,7 +524,11 @@
   function tick(now) {
     const dt = Math.min(1100, now - lastNow);
     lastNow = now;
-    if (rec.current) $('recTime').textContent = fmtClock(recElapsed());
+    if (rec.current) {
+      $('recTime').textContent = fmtClock(recElapsed());
+      const hudRec = document.getElementById('hudRec');
+      if (hudRec) hudRec.textContent = recStatus();
+    }
 
     if (state === 'countdown') {
       countdownLeft -= dt;
@@ -553,6 +557,7 @@
 
   function startPlayback(withCountdown) {
     navigated = false;
+    clearTimeout(rec.tailTimer);
     if (C.record && rec.stream) { if (rec.current) resumeTake(); else startTake(); }
     frameElapsed = withCountdown ? 0 : frameElapsed;
     if (withCountdown && C.countdown > 0) {
@@ -569,14 +574,16 @@
   }
 
   function pause() {
-    pauseTake();
+    if (C.recPause) pauseTake();
     if (state === 'countdown') frameElapsed = 0;
     setState('paused');
     renderFrame();
   }
 
   function finish() {
-    stopTake();
+    // Последнее слово обычно договаривают чуть позже, чем оно исчезает, поэтому дубль не обрываем:
+    // в непрерывном режиме запись идёт до выхода, в режиме с паузой — встаёт на паузу через 2 с
+    if (rec.current && C.recPause) rec.tailTimer = setTimeout(pauseTake, 2000);
     idx = frames.length - 1;
     frameElapsed = P.frameMs(frames[idx], C);
     setState('ended');
@@ -650,9 +657,7 @@
     const f = frames[idx];
     const passed = cum[idx] + frameElapsed;
     const left = (cum[frames.length] || 0) - passed;
-    let recNote = '';
-    if (rec.current) recNote = `&emsp;<span class="hud-rec">Запись на паузе, ${fmtClock(recElapsed())}</span>`;
-    else if (state === 'ended' && rec.takes.length > rec.takesAtOpen) recNote = '&emsp;<span class="hud-rec">Дубль записан</span>';
+    const recNote = rec.current ? `&emsp;<span class="hud-rec" id="hudRec">${recStatus()}</span>` : '';
     $('hudWhere').innerHTML = `<span>Слово ${Math.min(totalWords, wordIdx[idx] + 1)} из ${totalWords}</span>&emsp;<span>осталось ${fmtClock(left)}</span>&emsp;<span>${C.wpm} сл/мин</span>${recNote}`;
 
     const p = getParsed();
@@ -977,6 +982,7 @@
   }
 
   function stopTake() {
+    clearTimeout(rec.tailTimer);
     const t = rec.current;
     if (!t) return Promise.resolve();
     if (t.recorder.state === 'recording') t.elapsed += performance.now() - t.since;
@@ -984,6 +990,11 @@
     if (t.recorder.state !== 'inactive') t.recorder.stop();
     renderRecBadge();
     return t.done;
+  }
+
+  function recStatus() {
+    const paused = rec.current && rec.current.recorder.state !== 'recording';
+    return `${paused ? 'Запись на паузе' : 'Идёт запись'}, ${fmtClock(recElapsed())}`;
   }
 
   function recElapsed() {

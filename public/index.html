@@ -133,13 +133,14 @@
             </div>
             <p class="rec-error" id="recError" hidden></p>
             <label class="switch"><span>Видеть себя за текстом</span><input type="checkbox" id="selfView"></label>
+            <label class="switch"><span>Ставить запись на паузу вместе с чтением</span><input type="checkbox" id="recPause"></label>
             <label class="row"><span>Камера</span><select id="camSelect"><option value="">По умолчанию</option></select></label>
             <label class="row"><span>Микрофон</span><select id="micSelect"><option value="">По умолчанию</option></select></label>
             <div class="row" data-pro><span>Качество</span>
               <div class="seg" id="recQuality" role="radiogroup" aria-label="Качество видео">
                 <button type="button" data-v="720">720p</button><button type="button" data-v="1080">1080p</button><button type="button" data-v="2160">4K</button>
               </div></div>
-            <p class="hint">Видео пишется прямо в браузере и никуда не отправляется. Каждый запуск чтения — отдельный дубль, на паузе запись тоже встаёт на паузу.</p>
+            <p class="hint">Видео пишется прямо в браузере и никуда не отправляется. Запись идёт от обратного отсчёта до выхода со сцены, клавиша R начинает новый дубль.</p>
             <button type="button" class="btn btn-small" id="takesOpen" disabled>Дублей пока нет</button>
           </div>
         </fieldset>
