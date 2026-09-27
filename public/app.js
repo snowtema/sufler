@@ -6,111 +6,19 @@
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const STORE = 'sufler.v1';
 
-  // ——— Язык интерфейса: берётся из <html lang>, страницы собираются из src/index.html ———
-  const LANG = document.documentElement.lang === 'ru' ? 'ru' : 'en';
-  const ruPlural = (n, forms) => {
-    const a = n % 10, b = n % 100;
-    return forms[a === 1 && b !== 11 ? 0 : a >= 2 && a <= 4 && (b < 12 || b > 14) ? 1 : 2];
+  // ——— Язык интерфейса: строки приходят из сборки (src/i18n/<язык>.json → window.SUFLER_I18N) ———
+  const LANG = document.documentElement.lang || 'en';
+  const T = window.SUFLER_I18N || {};
+  const tpl = (str, vars) => String(str).replace(/\{(\w+)\}/g, (_, k) => (vars[k] != null ? vars[k] : ''));
+  const pluralRules = new Intl.PluralRules(LANG);
+  const plural = (forms, n) => tpl(forms[pluralRules.select(n)] || forms.other, { n });
+  const num1 = (v) => v.toLocaleString(LANG, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  // FNV-1a, как в scripts/build.mjs: так узнаём нетронутый демо-текст любой языковой версии
+  const hash = (str) => {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h;
   };
-  const I18N = {
-    en: {
-      words: (n) => `${n} ${n === 1 ? 'word' : 'words'}`,
-      stops: (n) => `, plus ${n} ${n === 1 ? 'stop' : 'stops'}`,
-      dur: (m, s) => (m ? `${m} min ${s} s` : `${s} s`),
-      stats: (dur, words, stops) => `About <b>${dur}</b>, ${words}${stops}`,
-      durationNote: (words, wpm, stops) => `${words} at ${wpm} wpm${stops}`,
-      addText: 'Add text to start',
-      noText: 'No text yet',
-      wpm: (v) => `${v} wpm`,
-      decimal: '.',
-      wrapPlaceholder: 'text',
-      sectionPlaceholder: 'Section',
-      sampleWord: 'Sufler',
-      previewPlay: 'Check pace',
-      previewStop: 'Stop',
-      statusEnd: 'The end',
-      statusStop: 'Stop. Press Space to continue',
-      hudWhere: (n, total, left, wpm) => `<span>Word ${n} of ${total}</span>&emsp;<span>${left} left</span>&emsp;<span>${wpm} wpm</span>`,
-      again: 'Play again ',
-      cont: 'Continue ',
-      camFailed: (msg) => `Camera unavailable, reading without recording: ${msg}`,
-      toastSpeed: (v) => `Speed ${v} words per minute`,
-      toastFont: (v) => `Font ${v} px`,
-      toastWidth: (v) => `Width ${v} px`,
-      toastPos: (x, y) => `Position ${x} % × ${y} %`,
-      mirrorOn: 'Mirrored',
-      mirrorOff: 'Not mirrored',
-      recErr: { NotAllowedError: 'camera access is blocked in the browser settings', NotFoundError: 'no camera or microphone found', NotReadableError: 'the camera is busy in another app', unknown: 'unknown error' },
-      camError: (msg) => `Couldn’t turn on the camera: ${msg}.`,
-      camera: 'Camera',
-      microphone: 'Microphone',
-      recStatus: (paused, t) => `${paused ? 'Recording paused' : 'Recording'}, ${t}`,
-      camOn: 'Turn camera off',
-      camOff: 'Turn camera on',
-      kb: 'KB',
-      mb: 'MB',
-      downloaded: ', downloaded',
-      takesBtn: (n) => (n ? `Takes: ${n}` : 'No takes yet'),
-      takesEmpty: 'Nothing here yet. Turn on recording and start reading.',
-      take: (n) => `Take ${n}`,
-      download: 'Download',
-      del: 'Delete',
-      confirmDel: 'Delete for good?',
-      noRecorder: 'This browser can’t record video',
-      promptPlaceholder: 'PASTE YOUR SPEECH HERE',
-      copied: 'Copied',
-      copyFailed: 'Couldn’t copy',
-    },
-    ru: {
-      words: (n) => `${n} ${ruPlural(n, ['слово', 'слова', 'слов'])}`,
-      stops: (n) => `, плюс ${n} ${ruPlural(n, ['остановка', 'остановки', 'остановок'])}`,
-      dur: (m, s) => (m ? `${m} мин ${s} с` : `${s} с`),
-      stats: (dur, words, stops) => `Около <b>${dur}</b>, ${words}${stops}`,
-      durationNote: (words, wpm, stops) => `${words} при ${wpm} сл/мин${stops}`,
-      addText: 'Добавьте текст, чтобы начать',
-      noText: 'Текста пока нет',
-      wpm: (v) => `${v} сл/мин`,
-      decimal: ',',
-      wrapPlaceholder: 'текст',
-      sectionPlaceholder: 'Раздел',
-      sampleWord: 'Суфлёр',
-      previewPlay: 'Проверить темп',
-      previewStop: 'Стоп',
-      statusEnd: 'Конец',
-      statusStop: 'Стоп. Пробел — дальше',
-      hudWhere: (n, total, left, wpm) => `<span>Слово ${n} из ${total}</span>&emsp;<span>осталось ${left}</span>&emsp;<span>${wpm} сл/мин</span>`,
-      again: 'Ещё раз ',
-      cont: 'Продолжить ',
-      camFailed: (msg) => `Камера недоступна, читаем без записи: ${msg}`,
-      toastSpeed: (v) => `Скорость ${v} слов в минуту`,
-      toastFont: (v) => `Шрифт ${v} px`,
-      toastWidth: (v) => `Ширина ${v} px`,
-      toastPos: (x, y) => `Позиция ${x} % × ${y} %`,
-      mirrorOn: 'Зеркально',
-      mirrorOff: 'Без зеркала',
-      recErr: { NotAllowedError: 'доступ к камере запрещён в настройках браузера', NotFoundError: 'камера или микрофон не найдены', NotReadableError: 'камера занята другим приложением', unknown: 'неизвестная ошибка' },
-      camError: (msg) => `Не удалось включить камеру: ${msg}.`,
-      camera: 'Камера',
-      microphone: 'Микрофон',
-      recStatus: (paused, t) => `${paused ? 'Запись на паузе' : 'Идёт запись'}, ${t}`,
-      camOn: 'Выключить камеру',
-      camOff: 'Включить камеру',
-      kb: 'КБ',
-      mb: 'МБ',
-      downloaded: ', скачан',
-      takesBtn: (n) => (n ? `Дубли: ${n}` : 'Дублей пока нет'),
-      takesEmpty: 'Пока пусто. Включите запись и начните чтение.',
-      take: (n) => `Дубль ${n}`,
-      download: 'Скачать',
-      del: 'Удалить',
-      confirmDel: 'Точно удалить?',
-      noRecorder: 'Этот браузер не умеет записывать видео',
-      promptPlaceholder: 'ВСТАВЬТЕ СЮДА ТЕКСТ ВЫСТУПЛЕНИЯ',
-      copied: 'Скопировано',
-      copyFailed: 'Не удалось скопировать',
-    },
-  };
-  const T = I18N[LANG];
 
   const DEFAULTS = {
     wpm: 140, chunk: 1, punctFactor: 1, lengthAware: true,
@@ -126,38 +34,7 @@
   const SIMPLE_KEYS = ['mode', 'wpm', 'fontSize', 'width', 'posX', 'posY', 'beep', 'record', 'camId', 'micId', 'selfView', 'recPause'];
   const POS_PRESETS = { camera: [50, 16], center: [50, 50] };
 
-  const DEMO_EN = `# Intro
-Hi! / This is Sufler, // and in one minute I’ll show you how to record video *without your eyes drifting*.
-
-[look at the camera]
-Words appear one at a time, / always in the same spot — right under the camera. [PAUSE-SHORT] Your eyes stay put, / and viewers feel you’re talking to them.
-
-# How to mark up
-Pauses are slashes: / short, // normal /// and long.
-Key words go between asterisks — *like this*.
-[SLOW] A tricky idea can be read more slowly, [/SLOW] [FAST] and the obvious part can go faster. [/FAST]
-
-[STOP]
-# Wrap-up
-Need to switch slides? / Add a stop, and reading waits until you press Space. [PAUSE 1.5]
-Thanks for watching! [smile]`;
-
-  const DEMO_RU = `# Вступление
-Привет! / Это Суфлёр, // и за минуту я покажу, как записывать видео *без бегающего взгляда*.
-
-[смотри в камеру]
-Слова появляются по одному, / всегда в одной и той же точке — прямо под камерой. [PAUSE-SHORT] Глаза остаются на месте, / и зритель видит, что вы говорите с ним.
-
-# Как размечать текст
-Паузы ставятся косыми чертами: / короткая, // обычная /// и длинная.
-Важные слова выделяются звёздочками — *вот так*.
-[SLOW] Сложную мысль можно проговорить медленнее, [/SLOW] [FAST] а очевидное пробежать быстрее. [/FAST]
-
-[STOP]
-# Финал
-Нужно переключить слайд? / Поставьте стоп, и чтение подождёт, пока вы не нажмёте пробел. [PAUSE 1.5]
-Спасибо, что досмотрели! [улыбнись]`;
-  const DEMO = LANG === 'ru' ? DEMO_RU : DEMO_EN;
+  const DEMO = T.demo || '';
 
   let S = structuredClone(DEFAULTS);
   let C = S; // действующие настройки с учётом режима
@@ -175,7 +52,7 @@ Thanks for watching! [smile]`;
       const raw = localStorage.getItem(STORE);
       if (!raw) return;
       const data = JSON.parse(raw);
-      if (typeof data.text === 'string') text = data.text === DEMO_RU || data.text === DEMO_EN ? DEMO : data.text;
+      if (typeof data.text === 'string') text = (T.demoHashes || []).includes(hash(data.text)) ? DEMO : data.text;
       if (data.settings) {
         S = Object.assign(structuredClone(DEFAULTS), data.settings);
         S.pauses = Object.assign({}, DEFAULTS.pauses, data.settings.pauses);
@@ -193,14 +70,14 @@ Thanks for watching! [smile]`;
   let parsed = null;
   let parsedFor = null;
   function getParsed() {
-    if (parsedFor !== text) { parsed = P.parse(text); parsedFor = text; }
+    if (parsedFor !== text) { parsed = P.parse(text, { lang: LANG }); parsedFor = text; }
     return parsed;
   }
 
   // ——— Форматирование ———
   const fmtDur = (ms) => {
     const s = Math.round(ms / 1000), m = Math.floor(s / 60), r = s % 60;
-    return T.dur(m, r);
+    return m ? tpl(T.durMin, { m, s: r }) : tpl(T.durSec, { s: r });
   };
   const fmtClock = (ms) => {
     const s = Math.max(0, Math.round(ms / 1000));
@@ -213,7 +90,8 @@ Thanks for watching! [smile]`;
   const mirror = $('mirror');
 
   function highlight(src) {
-    const re = /(^[ \t]*#.*$)|(\[[^\]\n]*\])|((?<=^|\s)\/+(?=\s|$))|(\*[^*\n]+\*)/gm;
+    // Косые черты — пауза, если вокруг пробелы или японский/китайский текст (там пишут без пробелов)
+    const re = /(^[ \t]*#.*$)|(\[[^\]\n]*\])|((?<=^|\s|[\u3000-\u9fff\uff00-\uffef])\/+(?=\s|$|[\u3000-\u9fff\uff00-\uffef]))|(\*[^*\n]+\*)/gm;
     let out = '';
     let last = 0;
     let m;
@@ -255,11 +133,11 @@ Thanks for watching! [smile]`;
     const frames = P.buildFrames(p, C.chunk);
     let total = 0, stops = 0;
     for (const f of frames) { total += P.frameMs(f, C); if (f.type === 'stop') stops++; }
-    const words = T.words(p.wordCount);
-    const stopsNote = stops ? T.stops(stops) : '';
-    el.innerHTML = T.stats(fmtDur(total), words, stopsNote);
+    const words = plural(T.words, p.wordCount);
+    const stopsNote = stops ? plural(T.stops, stops) : '';
+    el.innerHTML = tpl(T.stats, { dur: fmtDur(total), words, stops: stopsNote });
     $('durationValue').textContent = fmtClock(total);
-    $('durationNote').textContent = T.durationNote(words, C.wpm, stopsNote);
+    $('durationNote').textContent = tpl(T.durationNote, { words, wpm: C.wpm, stops: stopsNote });
   }
 
   function insertText(str, selectFrom, selectTo) {
@@ -303,8 +181,8 @@ Thanks for watching! [smile]`;
 
   // ——— Настройки ———
   const RANGES = {
-    wpm: (v) => T.wpm(v),
-    punctFactor: (v) => `×${v.toFixed(1).replace('.', T.decimal)}`,
+    wpm: (v) => tpl(T.wpm, { v }),
+    punctFactor: (v) => `×${num1(v)}`,
     width: (v) => `${v} px`,
     fontSize: (v) => `${v} px`,
     posX: (v) => `${v} %`,
@@ -777,7 +655,7 @@ Thanks for watching! [smile]`;
     const passed = cum[idx] + frameElapsed;
     const left = (cum[frames.length] || 0) - passed;
     const recNote = rec.current ? `&emsp;<span class="hud-rec" id="hudRec">${recStatus()}</span>` : '';
-    $('hudWhere').innerHTML = T.hudWhere(Math.min(totalWords, wordIdx[idx] + 1), totalWords, fmtClock(left), C.wpm) + recNote;
+    $('hudWhere').innerHTML = tpl(T.hudWhere, { n: Math.min(totalWords, wordIdx[idx] + 1), total: totalWords, left: fmtClock(left), wpm: C.wpm }) + recNote;
 
     const p = getParsed();
     $('hudSections').innerHTML = p.sections.map((s, i) =>
@@ -790,7 +668,7 @@ Thanks for watching! [smile]`;
       ctx.innerHTML = words.map((w) => current.has(w) ? `<span class="cur">${esc(w.text)}</span>` : esc(w.text)).join(' ');
     } else ctx.textContent = '';
 
-    $('hudPlay').firstChild.textContent = state === 'ended' ? T.again : T.cont;
+    $('hudPlay').firstChild.textContent = (state === 'ended' ? T.again : T.cont) + ' ';
   }
 
   let toastTimer = 0;
@@ -843,7 +721,7 @@ Thanks for watching! [smile]`;
     if (C.fullscreen && !document.fullscreenElement && stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
     requestWakeLock();
     startPlayback(true);
-    if (recFailed) toast(T.camFailed(recErrorText(recFailed)));
+    if (recFailed) toast(tpl(T.camFailed, { msg: recErrorText(recFailed) }));
     lastNow = performance.now();
     stopLoop();
     const loop = (now) => { raf = requestAnimationFrame(loop); tick(now); };
@@ -901,13 +779,13 @@ Thanks for watching! [smile]`;
     else if (k === 'Home') goTo(findWords(0, 1));
     else if (k === 'ArrowUp' || k === 'ArrowDown') {
       S.wpm = clamp(C.wpm + (k === 'ArrowUp' ? 10 : -10), 60, 360);
-      stageSettingChanged(T.toastSpeed(C.wpm));
+      stageSettingChanged(tpl(T.toastSpeed, { v: C.wpm }));
     } else if (c === 'Equal' || c === 'Minus' || c === 'NumpadAdd' || c === 'NumpadSubtract') {
       S.fontSize = clamp(C.fontSize + (c === 'Equal' || c === 'NumpadAdd' ? 4 : -4), 24, 220);
-      stageSettingChanged(T.toastFont(C.fontSize));
+      stageSettingChanged(tpl(T.toastFont, { v: C.fontSize }));
     } else if (c === 'BracketRight' || c === 'BracketLeft') {
       S.width = clamp(C.width + (c === 'BracketRight' ? 20 : -20), 160, 2400);
-      stageSettingChanged(T.toastWidth(C.width));
+      stageSettingChanged(tpl(T.toastWidth, { v: C.width }));
     } else if (c === 'KeyR') restart();
     else if (c === 'KeyF') toggleFullscreen();
     else if (c === 'KeyM' && S.mode === 'pro') { S.flip = !S.flip; stageSettingChanged(C.flip ? T.mirrorOn : T.mirrorOff); }
@@ -946,7 +824,7 @@ Thanks for watching! [smile]`;
     const d = drag;
     drag = null;
     stage.classList.remove('dragging');
-    if (d.moved) stageSettingChanged(d.mode === 'move' ? T.toastPos(C.posX, C.posY) : T.toastWidth(C.width));
+    if (d.moved) stageSettingChanged(d.mode === 'move' ? tpl(T.toastPos, { x: C.posX, y: C.posY }) : tpl(T.toastWidth, { v: C.width }));
     else togglePlay();
   }
 
@@ -993,7 +871,7 @@ Thanks for watching! [smile]`;
   function showRecError(err) {
     const el = $('recError');
     el.hidden = !err;
-    el.textContent = err ? T.camError(recErrorText(err)) : '';
+    el.textContent = err ? tpl(T.camError, { msg: recErrorText(err) }) : '';
   }
 
   async function getStream() {
@@ -1110,7 +988,7 @@ Thanks for watching! [smile]`;
 
   function recStatus() {
     const paused = rec.current && rec.current.recorder.state !== 'recording';
-    return T.recStatus(paused, fmtClock(recElapsed()));
+    return tpl(paused ? T.recordingPaused : T.recording, { t: fmtClock(recElapsed()) });
   }
 
   function recElapsed() {
@@ -1160,7 +1038,7 @@ Thanks for watching! [smile]`;
   const fmtSize = (b) => {
     const mb = b / 1048576;
     if (mb < 1) return `${Math.max(1, Math.round(b / 1024))} ${T.kb}`;
-    return mb >= 10 ? `${Math.round(mb)} ${T.mb}` : `${mb.toFixed(1).replace('.', T.decimal)} ${T.mb}`;
+    return mb >= 10 ? `${Math.round(mb)} ${T.mb}` : `${num1(mb)} ${T.mb}`;
   };
 
   function takeMeta(t) {
@@ -1170,14 +1048,14 @@ Thanks for watching! [smile]`;
   function renderTakes() {
     const btn = $('takesOpen');
     btn.disabled = !rec.takes.length;
-    btn.textContent = T.takesBtn(rec.takes.length);
+    btn.textContent = rec.takes.length ? tpl(T.takes, { n: rec.takes.length }) : T.noTakes;
     const list = $('takesList');
     if (!rec.takes.length) { list.innerHTML = `<li class="takes-empty">${T.takesEmpty}</li>`; return; }
     list.innerHTML = rec.takes.slice().reverse().map((t) => `
       <li class="take" data-n="${t.n}">
         <video src="${t.url}" controls preload="metadata" playsinline></video>
         <div class="take-info">
-          <b>${T.take(t.n)}</b>
+          <b>${tpl(T.take, { n: t.n })}</b>
           <span class="take-meta">${takeMeta(t)}</span>
           <div class="take-actions">
             <a class="btn btn-dark btn-small" href="${t.url}" download="${esc(t.name)}" data-save>${T.download}</a>

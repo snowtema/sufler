@@ -14,7 +14,14 @@
   const EMPH_FACTOR = 1.15;
 
   const LETTER = /[\p{L}\p{N}]/u;
-  const VOWELS = /[аеёиоуыэюяaeiouy]/gi;
+  const VOWELS = /[аеёиоуыэюяaeiouyàâäéèêëîïôöùûüÿáíóúñìòœæ]/gi;
+  // Японский и китайский пишутся без пробелов: такие куски делим на слова через Intl.Segmenter
+  const CJK = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
+  const CJK_ALL = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/g;
+  const KANA = /[\u3040-\u30ff\uff66-\uff9f]/;
+  const OPENERS = /^[「『（《“‘(［【〈]+$/;
+  const HIRAGANA_TAIL = /^[\u3040-\u309f]{1,3}$/; // は、を、し、ます… — клеим к предыдущему слову
+  const PUNCT_END = /[.!?…,;:。！？，、；：]$/;
 
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -46,20 +53,75 @@
   function syllables(word) {
     const vowels = (word.match(VOWELS) || []).length;
     const digits = (word.match(/\d/g) || []).length;
-    return Math.max(1, vowels, Math.ceil(digits * 1.5));
+    const cjk = (word.match(CJK_ALL) || []).length; // иероглиф или кана — примерно слог
+    return Math.max(1, vowels, cjk, Math.ceil(digits * 1.5));
   }
 
   function trailingPunct(word) {
-    const m = word.match(/([.!?…,;:—–-]+)[»"”’')\]]*$/u);
+    const m = word.match(/([.!?…,;:—–\-。！？，、；：]+)[»"”’')\]」』）》】〉]*$/u);
     if (!m) return 0;
-    return /[.!?…]/.test(m[1]) ? SENTENCE_UNITS : CLAUSE_UNITS;
+    return /[.!?…。！？]/.test(m[1]) ? SENTENCE_UNITS : CLAUSE_UNITS;
+  }
+
+  const segmenters = {};
+  function segmenterFor(text, lang) {
+    const loc = KANA.test(text) || /^ja/i.test(lang || '') ? 'ja' : 'zh';
+    if (!segmenters[loc]) segmenters[loc] = new Intl.Segmenter(loc, { granularity: 'word' });
+    return segmenters[loc];
+  }
+
+  /**
+   * Кусок японского/китайского текста → слова с позициями внутри куска.
+   * Пунктуация липнет к предыдущему слову, открывающие скобки и кавычки — к следующему.
+   * Звёздочки акцента чередуются: нечётная открывает (к следующему слову), чётная закрывает.
+   */
+  function splitCJK(raw, lang) {
+    const segs = typeof Intl !== 'undefined' && Intl.Segmenter
+      ? Array.from(segmenterFor(raw, lang).segment(raw))
+      : Array.from(raw).map((ch, i) => ({ segment: ch, index: i, isWordLike: LETTER.test(ch) }));
+    const out = [];
+    let prefix = '';
+    let prefixFrom = -1;
+    let stars = 0;
+    const toNext = (t, i) => { prefix += t; if (prefixFrom < 0) prefixFrom = i; };
+    for (const { segment: t, index, isWordLike } of segs) {
+      if (/^\/+$/.test(t)) {
+        const last = out[out.length - 1];
+        if (last && last.pause && last.from + last.text.length === index) last.text += t;
+        else out.push({ text: t, from: index, pause: true }); // пауза без пробелов вокруг
+      } else if (/^\*+$/.test(t)) {
+        stars++;
+        const last = out[out.length - 1];
+        if (stars % 2 === 0 && last && !last.pause && !prefix) last.text += t;
+        else toNext(t, index);
+      } else if (isWordLike) {
+        const last = out[out.length - 1];
+        if (!prefix && last && !last.pause && HIRAGANA_TAIL.test(t) && KANA.test(raw) && !PUNCT_END.test(last.text)) {
+          last.text += t;
+          continue;
+        }
+        out.push({ text: prefix + t, from: prefixFrom >= 0 ? prefixFrom : index });
+        prefix = '';
+        prefixFrom = -1;
+      } else if (OPENERS.test(t) || !out.length || prefix || out[out.length - 1].pause) {
+        toNext(t, index);
+      } else {
+        out[out.length - 1].text += t;
+      }
+    }
+    if (prefix) {
+      if (out.length && !out[out.length - 1].pause) out[out.length - 1].text += prefix;
+      else out.push({ text: prefix, from: prefixFrom });
+    }
+    return out;
   }
 
   /**
    * Текст → токены: word | pause | stop.
    * У слов есть src/srcEnd (смещения в исходнике) для старта с курсора.
    */
-  function parse(text) {
+  function parse(text, opts) {
+    const lang = (opts && opts.lang) || '';
     const tokens = [];
     const sections = [];
     let speedStack = [];
@@ -94,10 +156,15 @@
       }
 
       const re = /\[[^\]\n]*\]|[^\s[]+|\[/g;
+      const pieces = [];
       let m;
       while ((m = re.exec(line))) {
-        const raw = m[0];
-        const start = lineStart + m.index;
+        const at = lineStart + m.index;
+        if (m[0][0] !== '[' && CJK.test(m[0])) {
+          for (const w of splitCJK(m[0], lang)) pieces.push({ raw: w.text, start: at + w.from });
+        } else pieces.push({ raw: m[0], start: at });
+      }
+      for (const { raw, start } of pieces) {
 
         if (pendingPara) {
           pendingPara = false;
@@ -123,8 +190,8 @@
           continue;
         }
 
-        const startsEmph = /^[«"“„'(]*\*/.test(raw);
-        const endsEmph = /\*[»"”’')\].,!?…:;—–-]*$/.test(raw);
+        const startsEmph = /^[«"“„'(「『（《【〈]*\*/.test(raw);
+        const endsEmph = /\*[»"”’')\].,!?…:;—–\-。！？，、；：」』）》】〉]*$/.test(raw);
         const word = raw.replace(/\*/g, '');
         if (!word) { emph = !emph; continue; }
 

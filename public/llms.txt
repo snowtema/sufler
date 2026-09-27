@@ -2,7 +2,7 @@
 
 > Sufler (https://sufler.artemslizhik.com) is a free online teleprompter for recording video. It shows your script one word at a time in a single spot on the screen, right under the camera, so you keep eye contact with the lens while reading. Pace, pauses and emphasis come from markup inside the text, and camera video records right in the browser.
 
-Sufler runs entirely in the browser: no sign-up, no server, no ads. Text, settings and recorded takes stay on the user's device. The interface is available in English (https://sufler.artemslizhik.com/) and Russian (https://sufler.artemslizhik.com/ru/, where the product is called «Суфлёр»); scripts can be in any language.
+Everything runs locally in the browser: no sign-up, no server, no ads. Nothing is uploaded — text, settings and recorded takes never leave the user's device. The interface is available in English (https://sufler.artemslizhik.com/) and Russian (https://sufler.artemslizhik.com/ru/, where the product is called «Суфлёр»); scripts can be in any language.
 
 ## What it is for
 

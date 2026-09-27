@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{lang}}">
 <head>
 <meta charset="utf-8">
-<!-- OG image source, English (1200×630). Re-render: see README, “SEO”. -->
+<!-- Шаблон OG-картинки 1200×630. Рендер всех языков: node scripts/og.mjs -->
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600&family=Unbounded:wght@600&display=block" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; }
   html, body { width: 1200px; height: 630px; overflow: hidden; }
-  body { background: #e4e7eb; font-family: "Onest", sans-serif; color: #15171b; display: grid; grid-template-columns: 590px 1fr; align-items: center; padding: 0 64px 0 72px; gap: 20px; }
+  body { background: #e4e7eb; font-family: "Onest", "Hiragino Sans", "PingFang SC", "Noto Sans CJK JP", sans-serif; color: #15171b; display: grid; grid-template-columns: 590px 1fr; align-items: center; padding: 0 64px 0 72px; gap: 20px; }
   .brand { display: flex; align-items: center; gap: 16px; font: 600 38px/1 "Unbounded", sans-serif; letter-spacing: -0.02em; }
   .tally { width: 20px; height: 20px; border-radius: 50%; background: #ef3a2d; box-shadow: 0 0 0 6px rgba(239, 58, 45, 0.18), 0 0 22px rgba(239, 58, 45, 0.45); }
-  h1 { margin-top: 44px; font-weight: 600; font-size: 56px; line-height: 1.08; letter-spacing: -0.025em; }
+  h1 { white-space: pre-line; margin-top: 44px; font-weight: 600; font-size: 56px; line-height: 1.08; letter-spacing: -0.025em; }
   p { margin-top: 24px; font-size: 25px; line-height: 1.4; color: #4a5059; }
   .url { margin-top: 40px; font-size: 21px; color: #6b727c; }
   .monitor { display: flex; flex-direction: column; align-items: center; }
@@ -18,7 +18,7 @@
   .cam { position: absolute; top: 8px; left: 50%; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: #3a3f47; }
   .led { position: absolute; top: 9.5px; left: calc(50% + 14px); width: 5px; height: 5px; border-radius: 50%; background: #ef3a2d; box-shadow: 0 0 8px 2px rgba(239, 58, 45, 0.5); }
   .screen { position: relative; aspect-ratio: 16 / 10; border-radius: 4px; background: #000; }
-  .word { position: absolute; left: 0; right: 0; top: 17%; display: grid; grid-template-columns: 1fr auto 1fr; color: #f2f2f2; font-weight: 600; font-size: 64px; line-height: 1.2; }
+  .word { white-space: nowrap; position: absolute; left: 0; right: 0; top: 17%; display: grid; grid-template-columns: 1fr auto 1fr; color: #f2f2f2; font-weight: 600; font-size: 56px; line-height: 1.2; }
   .word .pre { text-align: right; } .word .pivot { color: #ff3b30; }
   .tick { position: absolute; left: 50%; width: 3px; height: 13px; margin-left: -1.5px; background: rgba(255, 255, 255, 0.42); border-radius: 2px; }
   .t1 { top: calc(17% - 12px); } .t2 { top: calc(17% + 82px); }
@@ -29,18 +29,18 @@
 </head>
 <body>
   <div>
-    <div class="brand"><span class="tally"></span>Sufler</div>
-    <h1>Read your script, keep eye contact</h1>
-    <p>One word at a time, right under your camera. Pauses and emphasis marked up in the text. Video records in the browser.</p>
+    <div class="brand"><span class="tally"></span>{{brand}}</div>
+    <h1>{{headline}}</h1>
+    <p>{{sub}}</p>
     <div class="url">sufler.artemslizhik.com</div>
   </div>
   <div class="monitor">
     <div class="body">
       <span class="cam"></span><span class="led"></span>
       <div class="screen">
-        <div class="cue">(look at the camera)</div>
+        <div class="cue">({{cue}})</div>
         <i class="tick t1"></i>
-        <div class="word"><span class="pre">H</span><span class="pivot">e</span><span class="post">llo</span></div>
+        <div class="word"><span class="pre">{{pre}}</span><span class="pivot">{{pivot}}</span><span class="post">{{post}}</span></div>
         <i class="tick t2"></i>
       </div>
     </div>

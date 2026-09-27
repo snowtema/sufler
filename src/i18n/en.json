@@ -1,0 +1,134 @@
+{
+  "lang": "en",
+  "htmlLang": "en",
+  "hreflang": "en",
+  "name": "English",
+  "ogLocale": "en_US",
+  "brand": "Sufler",
+  "langLabel": "Language: English",
+  "meta": {
+    "title": "Sufler — free online teleprompter for recording video",
+    "description": "Free online teleprompter: your script one word at a time right under the camera, pauses and emphasis via simple markup, video recording. Everything runs locally in your browser, nothing is uploaded.",
+    "ogTitle": "Sufler — read your script and keep eye contact",
+    "ogDescription": "Online teleprompter: one word at a time right under your webcam, pauses and emphasis marked up in the text, video recorded in the browser. Everything runs locally, nothing is uploaded. Free, no sign-up.",
+    "twitterDescription": "Online teleprompter: one word at a time right under your webcam, pauses and emphasis marked up in the text, video in the browser. Everything runs locally, nothing is uploaded.",
+    "ogImageAlt": "Sufler: a monitor with a webcam showing the word “Hello” with a red focus letter",
+    "ldAlternateName": [
+      "Суфлёр",
+      "Sufler teleprompter"
+    ],
+    "ldDescription": "Free online teleprompter for recording video. It shows your script one word at a time in a single spot on the screen, right under the camera, so you keep eye contact while reading. Pauses, emphasis and speed come from markup in the text, and camera video records right in the browser. Everything runs locally in the browser: text, settings and recordings never leave the device.",
+    "ldOs": "Any modern browser",
+    "ldBrowser": "Requires JavaScript. Video recording needs camera and microphone access.",
+    "ldFeatures": [
+      "Script shown one word at a time in a fixed spot under the camera",
+      "Runs locally in the browser: text, settings and recordings never leave the device",
+      "Speed in words per minute and an estimate of how long the talk will take",
+      "Pace markup: pauses, emphasis, slow-downs and speed-ups, stops, stage directions, sections",
+      "Automatic markup with a prompt for any AI assistant or a Claude skill",
+      "Camera and microphone recording in the browser, no server",
+      "Camera behind the text, mirror mode for glass teleprompters"
+    ]
+  },
+  "about": {
+    "title": "What is Sufler",
+    "intro": "Sufler is a free online teleprompter for recording video. It shows your script one word at a time in a single spot on the screen, right under your camera, so your eyes don’t scan across lines and you keep eye contact with the lens. Speed, pauses and emphasis come from simple markup in the text, and you can record camera video right here in the browser. Everything runs locally in your browser: no sign-up, no server, and your text, settings and videos never leave your device.",
+    "faq": [
+      [
+        "What is Sufler for?",
+        "For when you need to record a video, a pitch or a presentation quickly and there’s no time to memorize the script. Sufler shows the text word by word right under the camera, so you read without looking away and come across as if you were speaking in your own words."
+      ],
+      [
+        "Can the text be marked up automatically?",
+        "Yes. “Mark up automatically” has a ready-made prompt for ChatGPT, Gemini, Claude and other AI assistants, plus a Claude skill that also checks the result."
+      ],
+      [
+        "Is anything sent to a server?",
+        "No. Sufler runs entirely in your browser: your text and settings are stored on your device, video is recorded locally, and takes download to your Downloads folder. Nothing is sent to a server."
+      ],
+      [
+        "How do I put the text under the camera?",
+        "Pick the “Under camera” position or drag the word block while paused. Adjust the width and font size so your gaze barely leaves the lens."
+      ]
+    ],
+    "meta": "Made by <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Free, no sign-up, no ads."
+  },
+  "llms": {
+    "title": "full markup reference",
+    "intro": "Sufler ({url}) is a free online teleprompter for recording video: it shows your script one word at a time right under the camera, and the pace is controlled by markup inside the text. Below is the full prompt any AI assistant can use to mark up a speech for Sufler. Paste the marked-up text into the editor at {url}.",
+    "promptHeading": "Markup prompt"
+  },
+  "og": {
+    "headline": "Read your script, keep eye contact",
+    "sub": "One word at a time, right under your camera. Pauses and emphasis marked up in the text. Video records in the browser.",
+    "cue": "look at the camera",
+    "word": [
+      "H",
+      "e",
+      "llo"
+    ]
+  },
+  "demo": "# Intro\nHi! / This is Sufler, // and in one minute I’ll show you how to record video *without your eyes drifting*.\n\n[look at the camera]\nWords appear one at a time, / always in the same spot — right under the camera. [PAUSE-SHORT] Your eyes stay put, / and viewers feel you’re talking to them.\n\n# How to mark up\nPauses are slashes: / short, // normal /// and long.\nKey words go between asterisks — *like this*.\n[SLOW] A tricky idea can be read more slowly, [/SLOW] [FAST] and the obvious part can go faster. [/FAST]\n\n[STOP]\n# Wrap-up\nNeed to switch slides? / Add a stop, and reading waits until you press Space. [PAUSE 1.5]\nThanks for watching! [smile]",
+  "prompt": "You are an experienced speechwriter and voice coach. You are marking up a speech for Sufler (https://sufler.artemslizhik.com), a teleprompter for recording video: it shows the speech one word at a time in a single spot on the screen, and the pace is controlled by markup inside the text.\n\n## Markup syntax\n/  //  ///  — short (0.5 s), normal (1 s) and long (2 s) pause. As a separate word, with spaces around it.\n[PAUSE 1.5] — a pause of exact length in seconds.\n[STOP] — stops until the speaker presses Space.\n*word* or *two words* — emphasis: highlighted and shown a little longer.\n[SLOW] … [/SLOW] — a slower passage. [FAST] … [/FAST] — a faster passage. Always close them.\n[any text] — a stage direction: shown small above the next word, not read aloud. For example [smile], [look at the camera].\n# Heading — on its own line: a section. Not shown on screen; used to re-record takes part by part.\n\nSufler already pauses on punctuation and blank lines and shows longer words for longer. Don’t put a pause after every comma: a manual pause belongs where the meaning needs a stop beyond the punctuation.\n\n## Rules\n1. Don’t change, add or remove words or punctuation. You may only add markup, split the text into paragraphs and insert section lines.\n2. First understand the arc: the opening, the problem, the solution, the key message, the call to action. The markup should bring out this structure, not cover the text evenly.\n3. Pauses: after a greeting (/), before the key point or an unexpected turn (//), after a strong number or fact (//), after a rhetorical question (//), at the “problem → solution” turn (//). Use the long /// rarely: before the ending or between major blocks. In a long sentence without punctuation, put / where the speaker can breathe. Rule of thumb: one manual pause per one or two sentences.\n4. Emphasis: one key word per paragraph, occasionally two. Numbers, the product name, a contrast word. Don’t emphasize whole phrases.\n5. [SLOW] — the key message, a key number, the call to action. Keep it short, within one sentence. [FAST] — asides, disclaimers, secondary details; if there are none, don’t use it at all.\n6. [STOP] — only where the speaker needs to do something: switch a slide, show a demo, ask the audience a question.\n7. Stage directions — 1–3 words, no more than two or three per minute of speech.\n8. Sections # — by logical blocks, titles of 1–3 words. Usually not needed for texts shorter than about 120 words.\n9. If the text already has Sufler markup, redo it according to these rules.\n10. Keep the speech in its original language and write your notes in that language too.\n\n## Response format\n1. The whole marked-up text in a single code block so it can be copied.\n2. One to three lines: what you did and why. If a target duration is given, estimate the length at 140 words per minute and suggest a speed setting.\n3. If there is anything to suggest, up to five tips: numbers with spaces as separators (for example “2 500 000” would show as three separate words), abbreviations and symbols (%, $, “e.g.”), sentences that are too long. Don’t apply the tips to the text, just list them.\n\n## Context\nFormat: —\nSlides: —\nTarget duration: —\n(A dash means “not specified”. You can replace it, for example: “investor pitch”, “yes”, “1:30”.)\n\n## Speech\n\"\"\"\nPASTE YOUR SPEECH HERE\n\"\"\"",
+  "promptPlaceholder": "PASTE YOUR SPEECH HERE",
+  "js": {
+    "words": {
+      "one": "{n} word",
+      "other": "{n} words"
+    },
+    "stops": {
+      "one": ", plus {n} stop",
+      "other": ", plus {n} stops"
+    },
+    "durMin": "{m} min {s} s",
+    "durSec": "{s} s",
+    "stats": "About <b>{dur}</b>, {words}{stops}",
+    "durationNote": "{words} at {wpm} wpm{stops}",
+    "addText": "Add text to start",
+    "noText": "No text yet",
+    "wpm": "{v} wpm",
+    "wrapPlaceholder": "text",
+    "sectionPlaceholder": "Section",
+    "sampleWord": "Sufler",
+    "previewPlay": "Check pace",
+    "previewStop": "Stop",
+    "statusEnd": "The end",
+    "statusStop": "Stop. Press Space to continue",
+    "hudWhere": "<span>Word {n} of {total}</span>&emsp;<span>{left} left</span>&emsp;<span>{wpm} wpm</span>",
+    "again": "Play again",
+    "cont": "Continue",
+    "camFailed": "Camera unavailable, reading without recording: {msg}",
+    "toastSpeed": "Speed {v} words per minute",
+    "toastFont": "Font {v} px",
+    "toastWidth": "Width {v} px",
+    "toastPos": "Position {x} % × {y} %",
+    "mirrorOn": "Mirrored",
+    "mirrorOff": "Not mirrored",
+    "recErr": {
+      "NotAllowedError": "camera access is blocked in the browser settings",
+      "NotFoundError": "no camera or microphone found",
+      "NotReadableError": "the camera is busy in another app",
+      "unknown": "unknown error"
+    },
+    "camError": "Couldn’t turn on the camera: {msg}.",
+    "camera": "Camera",
+    "microphone": "Microphone",
+    "recording": "Recording, {t}",
+    "recordingPaused": "Recording paused, {t}",
+    "camOn": "Turn camera off",
+    "camOff": "Turn camera on",
+    "kb": "KB",
+    "mb": "MB",
+    "downloaded": ", downloaded",
+    "takes": "Takes: {n}",
+    "noTakes": "No takes yet",
+    "takesEmpty": "Nothing here yet. Turn on recording and start reading.",
+    "take": "Take {n}",
+    "download": "Download",
+    "del": "Delete",
+    "confirmDel": "Delete for good?",
+    "noRecorder": "This browser can’t record video",
+    "copied": "Copied",
+    "copyFailed": "Couldn’t copy"
+  }
+}
