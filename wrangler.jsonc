@@ -3,6 +3,10 @@
   "name": "sufler",
   "account_id": "49692a68920d96ed006d4d502d604cd6",
   "compatibility_date": "2026-09-20",
+  // Перед деплоем и wrangler dev собираем архив скилла, чтобы его можно было скачать с сайта
+  "build": {
+    "command": "rm -f public/sufler-markup.zip && cd skill && zip -qr -X ../public/sufler-markup.zip sufler-markup -x '*.DS_Store'"
+  },
   "assets": {
     "directory": "./public"
   },

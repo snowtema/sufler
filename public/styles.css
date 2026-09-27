@@ -391,6 +391,51 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px 
   background: var(--metal);
 }
 
+/* ——— Автоматическая разметка ——— */
+.auto-link, .inline-link {
+  border: 0; background: none; padding: 0;
+  color: var(--c-cmd); font-weight: 500;
+  text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--c-cmd) 35%, transparent);
+  text-underline-offset: 3px;
+}
+.auto-link { margin-left: auto; font-size: 13.5px; padding: 0 4px; }
+.auto-link:hover, .inline-link:hover { text-decoration-color: currentColor; }
+
+.dialog {
+  width: min(540px, calc(100% - 32px));
+  max-height: calc(100vh - 48px);
+  padding: 0; border: 0;
+  border-radius: var(--r-sheet);
+  background: var(--sheet); color: var(--ink);
+  box-shadow: 0 30px 80px -30px rgba(10, 15, 25, 0.5);
+}
+.dialog::backdrop { background: rgba(15, 18, 24, 0.38); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.dialog[open] { animation: dialog-in 0.18s ease-out; }
+@keyframes dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+.dialog-body { position: relative; padding: 26px 28px 28px; }
+.dialog h2 { margin: 0 36px 8px 0; font: 600 20px/1.25 var(--display); letter-spacing: -0.02em; }
+.dialog h3 { margin: 24px 0 8px; font-size: 15px; font-weight: 600; }
+.dialog p { margin: 0; color: var(--ink-2); line-height: 1.55; }
+.dialog-lead { margin-bottom: 18px !important; }
+.dialog-steps { margin: 0; display: grid; gap: 4px; }
+.dialog-steps dt { font-weight: 500; margin-top: 8px; }
+.dialog-steps dd { margin: 0; color: var(--ink-2); line-height: 1.55; }
+.dialog .code-block { display: block; margin-top: 6px; padding: 10px 12px; border-radius: var(--r-ctl); background: var(--chip); font-size: 13px; line-height: 1.4; user-select: all; overflow-x: auto; white-space: nowrap; }
+.dialog-close {
+  position: absolute; top: 18px; right: 18px;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 0; background: var(--chip);
+}
+.dialog-close::before, .dialog-close::after {
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 13px; height: 1.5px; background: var(--ink-2);
+}
+.dialog-close::before { transform: translate(-50%, -50%) rotate(45deg); }
+.dialog-close::after { transform: translate(-50%, -50%) rotate(-45deg); }
+.dialog-close:hover { background: var(--line-soft); }
+.btn-dark { background: var(--ink); color: var(--sheet); border-color: transparent; text-decoration: none; font-weight: 600; }
+.btn-dark:hover { border-color: transparent; opacity: 0.9; }
+
 /* ——— Сцена чтения ——— */
 .stage, .monitor-screen {
   --bg: #000; --fg: #f2f2f2; --pivot: #ff3b30; --emph: #ffc53d; --dim: rgba(255, 255, 255, 0.42); --hud-bg: rgba(26, 28, 32, 0.78); --hud-line: rgba(255, 255, 255, 0.12);
@@ -544,6 +589,7 @@ kbd {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .dialog[open] { animation: none; }
   .cue, .toast, .switch input, .switch input::before, .chip, .btn { transition: none; }
   .word.countdown { animation: none; }
 }

@@ -847,6 +847,12 @@
     $('startCursor').addEventListener('click', () => openStage(true));
     $('monitorPlay').addEventListener('click', () => (preview.frame ? stopPreview() : startPreview()));
 
+    const skillDialog = $('skillDialog');
+    for (const b of document.querySelectorAll('[data-skill-open]')) b.addEventListener('click', () => skillDialog.showModal());
+    skillDialog.querySelector('[data-dialog-close]').addEventListener('click', () => skillDialog.close());
+    // Клик по затемнению вокруг окна закрывает его
+    skillDialog.addEventListener('click', (e) => { if (e.target === skillDialog) skillDialog.close(); });
+
     new ResizeObserver(() => { renderMonitor(); renderMirror(); }).observe($('monitorScreen'));
     new ResizeObserver(() => { mirror.scrollTop = ta.scrollTop; }).observe(ta);
     renderMonitor();
