@@ -308,7 +308,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px 
   transition: color 0.15s, background 0.15s;
 }
 .seg button:hover { color: var(--ink); }
-.seg button[aria-checked="true"] { background: var(--sheet); color: var(--ink); font-weight: 500; box-shadow: var(--shadow-ctl); }
+.seg button[aria-checked="true"],
+.seg button[aria-selected="true"] { background: var(--sheet); color: var(--ink); font-weight: 500; box-shadow: var(--shadow-ctl); }
 .mode-switch { background: color-mix(in srgb, var(--ink) 6%, transparent); }
 
 .row select {
@@ -433,6 +434,33 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px 
 .dialog-close::before { transform: translate(-50%, -50%) rotate(45deg); }
 .dialog-close::after { transform: translate(-50%, -50%) rotate(-45deg); }
 .dialog-close:hover { background: var(--line-soft); }
+.dialog-tabs { display: flex; margin-bottom: 18px; }
+.dialog-tabs button { flex: 1; height: 32px; }
+.dialog-panel > p { margin-bottom: 16px; }
+.dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.dialog-actions .btn:disabled { opacity: 0.45; cursor: default; }
+.dialog-actions .btn.copied { border-color: var(--c-cmd); color: var(--c-cmd); }
+.dialog-actions .btn-dark.copied { background: var(--c-cmd); color: #fff; }
+.prompt-preview summary {
+  list-style: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--ink-2); font-weight: 500;
+}
+.prompt-preview summary::-webkit-details-marker { display: none; }
+.prompt-preview summary::before {
+  content: ""; width: 6px; height: 6px;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg); transition: transform 0.15s;
+}
+.prompt-preview[open] summary::before { transform: rotate(45deg) translate(-2px, -2px); }
+.prompt-preview pre {
+  margin: 10px 0 0; padding: 14px 16px;
+  max-height: 280px; overflow: auto;
+  border-radius: var(--r-ctl);
+  background: var(--chip); color: var(--ink-2);
+  font: 12.5px/1.55 var(--ui);
+  white-space: pre-wrap;
+}
 .btn-dark { background: var(--ink); color: var(--sheet); border-color: transparent; text-decoration: none; font-weight: 600; }
 .btn-dark:hover { border-color: transparent; opacity: 0.9; }
 

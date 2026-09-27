@@ -826,6 +826,51 @@
     });
   }
 
+  // ——— Промпт для любой нейросети ———
+  const PROMPT_PLACEHOLDER = 'ВСТАВЬТЕ СЮДА ТЕКСТ ВЫСТУПЛЕНИЯ';
+
+  async function copyText(str) {
+    try {
+      await navigator.clipboard.writeText(str);
+      return true;
+    } catch (_) {
+      // Нет доступа к Clipboard API (например, страница открыта как файл) — старый способ
+      const tmp = document.createElement('textarea');
+      tmp.value = str;
+      tmp.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+      $('skillDialog').appendChild(tmp);
+      tmp.select();
+      const ok = document.execCommand('copy');
+      tmp.remove();
+      return ok;
+    }
+  }
+
+  function flashCopied(btn, ok) {
+    const label = btn.dataset.label || (btn.dataset.label = btn.textContent);
+    btn.textContent = ok ? 'Скопировано' : 'Не удалось скопировать';
+    btn.classList.toggle('copied', ok);
+    clearTimeout(btn._t);
+    btn._t = setTimeout(() => { btn.textContent = label; btn.classList.remove('copied'); }, 1600);
+  }
+
+  function bindPromptDialog() {
+    const prompt = () => $('promptText').textContent;
+    $('copyPrompt').addEventListener('click', async (e) => flashCopied(e.currentTarget, await copyText(prompt())));
+    $('copyPromptWithText').addEventListener('click', async (e) => {
+      flashCopied(e.currentTarget, await copyText(prompt().replace(PROMPT_PLACEHOLDER, ta.value.trim())));
+    });
+    const tabs = [[$('tabPrompt'), $('panelPrompt')], [$('tabSkill'), $('panelSkill')]];
+    for (const [tab] of tabs) {
+      tab.addEventListener('click', () => {
+        for (const [t, panel] of tabs) {
+          t.setAttribute('aria-selected', String(t === tab));
+          panel.hidden = t !== tab;
+        }
+      });
+    }
+  }
+
   // ——— Запуск ———
   function init() {
     load();
@@ -848,7 +893,13 @@
     $('monitorPlay').addEventListener('click', () => (preview.frame ? stopPreview() : startPreview()));
 
     const skillDialog = $('skillDialog');
-    for (const b of document.querySelectorAll('[data-skill-open]')) b.addEventListener('click', () => skillDialog.showModal());
+    for (const b of document.querySelectorAll('[data-skill-open]')) {
+      b.addEventListener('click', () => {
+        $('copyPromptWithText').disabled = !ta.value.trim();
+        skillDialog.showModal();
+      });
+    }
+    bindPromptDialog();
     skillDialog.querySelector('[data-dialog-close]').addEventListener('click', () => skillDialog.close());
     // Клик по затемнению вокруг окна закрывает его
     skillDialog.addEventListener('click', (e) => { if (e.target === skillDialog) skillDialog.close(); });
