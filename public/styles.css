@@ -104,7 +104,13 @@ body[data-mode="pro"] [data-simple] { display: none !important; }
 }
 .stats { flex: 1; min-width: 0; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stats b { color: var(--ink); font-weight: 600; }
-.actions { display: flex; gap: 8px; }
+.actions { display: flex; align-items: center; gap: 8px; }
+.lang-switch {
+  display: inline-flex; align-items: center; height: 32px; padding: 0 10px;
+  border-radius: 999px; color: var(--muted); font-size: 13.5px; font-weight: 500; text-decoration: none;
+}
+.lang-switch:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.lang-switch.suggest { color: var(--ink); border: 1px solid var(--line); background: var(--sheet); }
 
 .btn {
   display: inline-flex; align-items: center; gap: 9px;

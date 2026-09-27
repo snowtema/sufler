@@ -1,8 +1,8 @@
-# Суфлёр открыт для всех поисковых систем и AI-ассистентов
+# Sufler is open to all search engines and AI assistants
 User-agent: *
 Allow: /
 
-# Явно разрешаем AI-поиск и ассистентов, чтобы Суфлёр могли находить и цитировать
+# AI search and assistants are explicitly allowed so Sufler can be found and cited
 User-agent: GPTBot
 User-agent: OAI-SearchBot
 User-agent: ChatGPT-User

@@ -1,0 +1,510 @@
+<!doctype html>
+<!--
+  Шаблон страницы на двух языках. scripts/build.mjs собирает из него public/index.html (en)
+  и public/ru/index.html (ru). Синтаксис: {{English||Русский}} в одну строку,
+  блоки {{#en}}…{{/en}} и {{#ru}}…{{/ru}}, {{@lang}} — код языка.
+-->
+<html lang="{{@lang}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>try{var p=localStorage.getItem('sufler.lang');if(p&&p!==document.documentElement.lang)location.replace(p==='ru'?'/ru/':'/')}catch(e){}</script>
+{{#en}}
+  <title>Sufler — free online teleprompter for recording video</title>
+  <meta name="description" content="Free online teleprompter: your script appears one word at a time right under the camera. Pauses and emphasis come from simple markup, and video records in your browser.">
+  <link rel="canonical" href="https://sufler.artemslizhik.com/">
+{{/en}}
+{{#ru}}
+  <title>Суфлёр — онлайн-телесуфлёр для записи видео у камеры</title>
+  <meta name="description" content="Бесплатный онлайн-телесуфлёр: текст показывается по одному слову прямо под камерой, паузы и акценты задаются разметкой, видео пишется в браузере.">
+  <link rel="canonical" href="https://sufler.artemslizhik.com/ru/">
+{{/ru}}
+  <link rel="alternate" hreflang="en" href="https://sufler.artemslizhik.com/">
+  <link rel="alternate" hreflang="ru" href="https://sufler.artemslizhik.com/ru/">
+  <link rel="alternate" hreflang="x-default" href="https://sufler.artemslizhik.com/">
+  <meta name="author" content="Artem Slizhik">
+  <meta name="theme-color" content="#e4e7eb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+{{#en}}
+  <meta property="og:site_name" content="Sufler">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="ru_RU">
+  <meta property="og:url" content="https://sufler.artemslizhik.com/">
+  <meta property="og:title" content="Sufler — read your script and keep eye contact">
+  <meta property="og:description" content="Online teleprompter: one word at a time right under your webcam, pauses and emphasis marked up in the text, video recorded in the browser. Free, no sign-up.">
+  <meta property="og:image" content="https://sufler.artemslizhik.com/og.png">
+  <meta property="og:image:alt" content="Sufler: a monitor with a webcam showing the word “Hello” with a red focus letter">
+  <meta name="twitter:title" content="Sufler — read your script and keep eye contact">
+  <meta name="twitter:description" content="Online teleprompter: one word at a time right under your webcam, pauses and emphasis marked up in the text, video recorded in the browser.">
+  <meta name="twitter:image" content="https://sufler.artemslizhik.com/og.png">
+{{/en}}
+{{#ru}}
+  <meta property="og:site_name" content="Суфлёр">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:url" content="https://sufler.artemslizhik.com/ru/">
+  <meta property="og:title" content="Суфлёр — читайте с экрана и смотрите в камеру">
+  <meta property="og:description" content="Онлайн-телесуфлёр: слова по одному прямо под камерой, паузы и акценты разметкой в тексте, запись видео в браузере. Бесплатно, без регистрации.">
+  <meta property="og:image" content="https://sufler.artemslizhik.com/og-ru.png">
+  <meta property="og:image:alt" content="Суфлёр: монитор с камерой, на экране слово «Привет» с красной буквой фокуса">
+  <meta name="twitter:title" content="Суфлёр — читайте с экрана и смотрите в камеру">
+  <meta name="twitter:description" content="Онлайн-телесуфлёр: слова по одному прямо под камерой, паузы и акценты разметкой в тексте, запись видео в браузере.">
+  <meta name="twitter:image" content="https://sufler.artemslizhik.com/og-ru.png">
+{{/ru}}
+  <link rel="alternate" type="text/plain" href="https://sufler.artemslizhik.com/llms.txt" title="llms.txt">
+
+{{#en}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Sufler",
+    "alternateName": ["Суфлёр", "Sufler teleprompter"],
+    "url": "https://sufler.artemslizhik.com/",
+    "image": "https://sufler.artemslizhik.com/og.png",
+    "description": "Free online teleprompter for recording video. It shows your script one word at a time in a single spot on the screen, right under the camera, so you keep eye contact while reading. Pauses, emphasis and speed come from markup in the text, and camera video records right in the browser.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any modern browser",
+    "browserRequirements": "Requires JavaScript. Video recording needs camera and microphone access.",
+    "inLanguage": "en",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "featureList": [
+      "Script shown one word at a time in a fixed spot under the camera",
+      "Speed in words per minute and an estimate of how long the talk will take",
+      "Pace markup: pauses, emphasis, slow-downs and speed-ups, stops, stage directions, sections",
+      "Automatic markup with a prompt for any AI assistant or a Claude skill",
+      "Camera and microphone recording in the browser, no server",
+      "Camera behind the text, mirror mode for glass teleprompters"
+    ],
+    "creator": { "@type": "Person", "name": "Artem Slizhik", "url": "https://artemslizhik.com/" }
+  }
+  </script>
+{{/en}}
+{{#ru}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Суфлёр",
+    "alternateName": ["Sufler", "Онлайн-телесуфлёр Суфлёр"],
+    "url": "https://sufler.artemslizhik.com/ru/",
+    "image": "https://sufler.artemslizhik.com/og-ru.png",
+    "description": "Бесплатный онлайн-телесуфлёр для записи видео. Показывает текст по одному слову в одной точке экрана, прямо под камерой, чтобы при чтении взгляд не уходил от объектива. Паузы, акценты и скорость задаются разметкой в тексте, видео с камеры записывается прямо в браузере.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Любой современный браузер",
+    "browserRequirements": "Требуется JavaScript. Для записи видео — доступ к камере и микрофону.",
+    "inLanguage": "ru",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "featureList": [
+      "Показ текста по одному слову в фиксированной точке под камерой",
+      "Скорость в словах в минуту и оценка длительности выступления",
+      "Разметка темпа: паузы, акценты, замедление и ускорение, стопы, ремарки, разделы",
+      "Автоматическая разметка текста промптом для любой нейросети или скиллом для Claude",
+      "Запись видео с камеры и микрофона в браузере без сервера",
+      "Камера фоном под текстом, зеркальный режим для суфлёра со стеклом"
+    ],
+    "creator": { "@type": "Person", "name": "Artem Slizhik", "url": "https://artemslizhik.com/" }
+  }
+  </script>
+{{/ru}}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600&family=Golos+Text:wght@400;600;700&family=PT+Serif:wght@400;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="brand"><span class="tally" aria-hidden="true"></span><span class="wordmark">{{Sufler||Суфлёр}}</span></div>
+      <div class="seg mode-switch" id="mode" role="radiogroup" aria-label="{{Interface mode||Режим интерфейса}}">
+        <button type="button" data-v="simple" title="{{Fewer settings||Минимум настроек}}">{{Simple||Простой}}</button><button type="button" data-v="pro" title="{{All settings||Все настройки}}">{{Pro||Про}}</button>
+      </div>
+      <div class="stats" id="stats" aria-live="polite"></div>
+      <div class="actions">
+{{#en}}
+        <a class="lang-switch" id="langSwitch" href="/ru/" hreflang="ru" lang="ru" data-lang="ru" title="Русская версия">RU</a>
+{{/en}}
+{{#ru}}
+        <a class="lang-switch" id="langSwitch" href="/" hreflang="en" lang="en" data-lang="en" title="English version">EN</a>
+{{/ru}}
+        <button class="btn" id="startCursor" type="button" title="{{Start from the word under the cursor (⌘/Ctrl + Enter)||Начать со слова под курсором (⌘/Ctrl + Enter)}}">{{From cursor||С курсора}}</button>
+        <button class="btn btn-rec" id="start" type="button"><span class="rec-dot" aria-hidden="true"></span>{{Start reading||Начать чтение}}</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="editor-col" aria-label="{{Text||Текст}}">
+        <div class="sheet">
+          <div class="toolbar" id="toolbar" role="toolbar" aria-label="{{Insert markup||Вставить разметку}}">
+            <button type="button" class="chip" data-simple data-insert="//" title="{{One-second pause||Пауза на секунду}}"><span class="glyph">//</span>{{pause||пауза}}</button>
+            <button type="button" class="chip" data-pro data-insert="/" title="{{Short pause, 0.5 s||Короткая пауза, 0,5 с}}"><span class="glyph">/</span>{{short||короткая}}</button>
+            <button type="button" class="chip" data-pro data-insert="//" title="{{Normal pause, 1 s||Обычная пауза, 1 с}}"><span class="glyph">//</span>{{pause||пауза}}</button>
+            <button type="button" class="chip" data-pro data-insert="///" title="{{Long pause, 2 s||Длинная пауза, 2 с}}"><span class="glyph">///</span>{{long||длинная}}</button>
+            <button type="button" class="chip" data-pro data-insert="[PAUSE 2]" title="{{Pause of exact length in seconds||Пауза точной длины в секундах}}">{{2 s pause||пауза 2 с}}</button>
+            <button type="button" class="chip" data-insert="[STOP]" title="{{Stop and wait for Space||Остановиться и ждать пробела}}">{{stop||стоп}}</button>
+            <span class="sep" data-pro aria-hidden="true"></span>
+            <button type="button" class="chip" data-wrap="*|*" title="{{Emphasize||Выделить акцент}}"><span class="glyph glyph-emph">*</span>{{emphasis||акцент}}</button>
+            <button type="button" class="chip" data-pro data-wrap="[SLOW] | [/SLOW]" title="{{Slow down a passage||Медленнее участок}}">{{slower||медленнее}}</button>
+            <button type="button" class="chip" data-pro data-wrap="[FAST] | [/FAST]" title="{{Speed up a passage||Быстрее участок}}">{{faster||быстрее}}</button>
+            <button type="button" class="chip" data-pro data-insert="{{[look at the camera]||[смотри в камеру]}}" title="{{Stage direction: shown above the word, not read aloud||Ремарка: видна над словом, не читается}}"><span class="glyph glyph-cue">[ ]</span>{{cue||ремарка}}</button>
+            <button type="button" class="chip" data-pro data-line="# " title="{{Section: hidden on screen, lets you jump between takes||Раздел: не показывается, по нему можно перейти}}"><span class="glyph glyph-sec">#</span>{{section||раздел}}</button>
+            <button type="button" class="auto-link" data-skill-open>{{Mark up automatically||Разметить автоматически}}</button>
+          </div>
+
+          <div class="editor" id="editorWrap">
+            <div class="editor-mirror" id="mirror" aria-hidden="true"></div>
+            <textarea id="text" spellcheck="true" aria-label="{{Speech text||Текст выступления}}" placeholder="{{Paste your script. Mark pauses with slashes: / // ///, emphasis with asterisks: *word*||Вставьте текст выступления. Паузы ставятся косыми чертами: / // ///, акценты звёздочками: *слово*}}"></textarea>
+          </div>
+        </div>
+
+        <details class="cheatsheet" id="cheatsheet">
+          <summary>{{How to mark up your text||Как размечать текст}}</summary>
+          <dl>
+            <dt><code>/</code> <code>//</code> <code>///</code></dt><dd>{{Short, normal and long pause. Same in words:||Короткая, обычная и длинная пауза. То же словами:}} <code>[PAUSE-SHORT]</code> <code>[PAUSE]</code> <code>[PAUSE-LONG]</code></dd>
+            <dt data-pro><code>[PAUSE 2.5]</code></dt><dd data-pro>{{Pause of exact length in seconds||Пауза точной длины в секундах}}</dd>
+            <dt><code>[STOP]</code></dt><dd>{{Stops until you press Space. Handy for switching slides or taking a breath||Остановка до нажатия пробела. Удобно, чтобы переключить слайд или перевести дыхание}}</dd>
+            <dt><code>{{*word*||*слово*}}</code></dt><dd>{{Emphasis: the word is highlighted and shown a little longer. Works for several words too||Акцент: слово выделено цветом и показывается чуть дольше. Можно выделить несколько слов}}</dd>
+            <dt data-pro><code>[SLOW]…[/SLOW]</code></dt><dd data-pro>{{Slower passage (×0.75).||Участок медленнее (×0,75).}} <code>[FAST]…[/FAST]</code> {{faster (×1.3),||быстрее (×1,3),}} <code>[SPEED 0.8]…[/SPEED]</code> {{sets your own multiplier||задаёт свой множитель}}</dd>
+            <dt data-pro><code>{{[any text]||[любой текст]}}</code></dt><dd data-pro>{{Stage direction: shown small above the word, not read aloud. For example||Ремарка: мелко над словом, читать её не нужно. Например}} <code>{{[smile]||[улыбнись]}}</code></dd>
+            <dt data-pro><code>{{# Heading||# Заголовок}}</code></dt><dd data-pro>{{Section. Not shown on screen, but while paused you can jump to it and redo a take||Раздел. На экране его нет, но на паузе можно перейти к нему и перезаписать дубль}}</dd>
+            <dt>{{Blank lines, punctuation||Пустая строка, знаки}}</dt><dd>{{Paragraphs and punctuation add pauses on their own||Абзацы и знаки препинания сами добавляют паузы}}<span data-pro>{{. The “Punctuation pauses” setting controls how long||. Их силу меняет настройка «Паузы на знаках»}}</span></dd>
+            <dt data-simple>{{More||Ещё}}</dt><dd data-simple>{{Slow-downs, speed-ups, cues and sections are described in Pro mode. If your text already has them, they work here too||Замедление, ускорение, ремарки и разделы описаны в режиме «Про». Если они уже есть в тексте, то работают и здесь}}</dd>
+{{#ru}}
+            <dt data-pro>По-русски</dt><dd data-pro>Команды можно писать и так: <code>[ПАУЗА]</code> <code>[ПАУЗА 2]</code> <code>[СТОП]</code> <code>[МЕДЛЕННО]</code> <code>[БЫСТРО]</code></dd>
+{{/ru}}
+            <dt>{{Automatically||Автоматически}}</dt><dd>{{Don’t want to do it by hand?||Не хочется размечать вручную? Это сделает}} <button type="button" class="inline-link" data-skill-open>{{Any AI with a ready-made prompt, or a Claude skill,||любая нейросеть по готовому промпту или скилл для Claude}}</button>{{ will place pauses, emphasis and stops for you without changing your words||: паузы, акценты и стопы расставятся сами, ваши слова останутся прежними}}</dd>
+          </dl>
+        </details>
+      </section>
+
+      <aside class="settings-col" aria-label="{{Settings||Настройки}}">
+        <figure class="monitor" id="monitor" aria-label="{{Where the block will be on your screen||Где на экране будет блок}}">
+          <div class="monitor-body" id="monitorBody">
+            <span class="cam" aria-hidden="true"></span>
+            <span class="cam-led" aria-hidden="true"></span>
+            <div class="monitor-screen" id="monitorScreen">
+              <video class="cam-layer" id="monitorCam" muted playsinline></video>
+              <div class="monitor-block" id="monitorBlock"><div class="monitor-word" id="monitorWord"></div></div>
+              <button type="button" class="monitor-play" id="monitorPlay">{{Check pace||Проверить темп}}</button>
+            </div>
+          </div>
+          <div class="monitor-stand" aria-hidden="true"></div>
+          <figcaption>{{This is where the block will sit on your screen||Так блок встанет на вашем экране}}</figcaption>
+        </figure>
+
+        <fieldset class="group">
+          <legend>{{Pace||Темп}}</legend>
+          <div class="duration" aria-live="polite">
+            <span class="duration-label">{{Your talk will take||Выступление займёт}}</span>
+            <span class="duration-value"><span class="approx">≈</span><b id="durationValue">0:00</b></span>
+            <span class="duration-note" id="durationNote"></span>
+          </div>
+          <label class="row"><span>{{Speed||Скорость}}</span><output id="wpmOut"></output>
+            <input type="range" id="wpm" min="60" max="360" step="5"></label>
+          <div class="row" data-pro><span>{{Words at a time||Слов за раз}}</span>
+            <div class="seg" id="chunk" role="radiogroup" aria-label="{{Words at a time||Слов за раз}}">
+              <button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button>
+            </div></div>
+          <label class="row" data-pro><span>{{Punctuation pauses||Паузы на знаках}}</span><output id="punctFactorOut"></output>
+            <input type="range" id="punctFactor" min="0" max="2.5" step="0.1"></label>
+          <label class="switch" data-pro><span>{{Longer words stay longer||Длинные слова дольше}}</span><input type="checkbox" id="lengthAware"></label>
+          <div class="row pauses" data-pro><span>{{Pauses, s||Паузы, с}}</span>
+            <label title="{{Short: /||Короткая: /}}"><input type="number" id="pShort" min="0" max="10" step="0.1"><small>/</small></label>
+            <label title="{{Normal: //||Обычная: //}}"><input type="number" id="pMedium" min="0" max="10" step="0.1"><small>//</small></label>
+            <label title="{{Long: ///||Длинная: ///}}"><input type="number" id="pLong" min="0" max="20" step="0.1"><small>///</small></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>{{Block||Блок}}</legend>
+          <label class="row"><span>{{Width||Ширина}}</span><output id="widthOut"></output>
+            <input type="range" id="width" min="160" max="1800" step="10"></label>
+          <label class="row"><span>{{Font size||Размер шрифта}}</span><output id="fontSizeOut"></output>
+            <input type="range" id="fontSize" min="24" max="220" step="2"></label>
+          <div class="row"><span>{{Position||Положение}}</span>
+            <div class="seg" id="posPreset" role="radiogroup" aria-label="{{Block position||Положение блока}}">
+              <button type="button" data-v="camera">{{Under camera||Под камерой}}</button><button type="button" data-v="center">{{Center||По центру}}</button>
+            </div></div>
+          <label class="row" data-pro><span>{{Horizontal||По горизонтали}}</span><output id="posXOut"></output>
+            <input type="range" id="posX" min="0" max="100" step="1"></label>
+          <label class="row" data-pro><span>{{Vertical||По вертикали}}</span><output id="posYOut"></output>
+            <input type="range" id="posY" min="0" max="100" step="1"></label>
+          <p class="hint">{{While paused, drag the block with the mouse and resize it by its edges.||На паузе блок можно перетащить мышью, а ширину менять за края.}}</p>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>{{Video recording||Запись видео}}</legend>
+          <label class="switch"><span>{{Record video from camera||Записывать видео с камеры}}</span><input type="checkbox" id="record"></label>
+          <div class="rec-body" id="recBody">
+            <div class="cam-preview" id="camPreview">
+              <video id="camVideo" muted playsinline></video>
+              <button type="button" class="cam-preview-btn" id="camToggle">{{Turn camera on||Включить камеру}}</button>
+              <div class="mic-meter" title="{{Microphone level||Уровень микрофона}}"><i id="micLevel"></i></div>
+            </div>
+            <p class="rec-error" id="recError" hidden></p>
+            <label class="switch"><span>{{See yourself behind the text||Видеть себя за текстом}}</span><input type="checkbox" id="selfView"></label>
+            <label class="switch"><span>{{Pause recording when reading pauses||Ставить запись на паузу вместе с чтением}}</span><input type="checkbox" id="recPause"></label>
+            <label class="row"><span>{{Camera||Камера}}</span><select id="camSelect"><option value="">{{Default||По умолчанию}}</option></select></label>
+            <label class="row"><span>{{Microphone||Микрофон}}</span><select id="micSelect"><option value="">{{Default||По умолчанию}}</option></select></label>
+            <div class="row" data-pro><span>{{Quality||Качество}}</span>
+              <div class="seg" id="recQuality" role="radiogroup" aria-label="{{Video quality||Качество видео}}">
+                <button type="button" data-v="720">720p</button><button type="button" data-v="1080">1080p</button><button type="button" data-v="2160">4K</button>
+              </div></div>
+            <p class="hint">{{Video is recorded right in your browser and never leaves your computer. Recording runs from the countdown until you leave the stage; R starts a new take.||Видео пишется прямо в браузере и никуда не отправляется. Запись идёт от обратного отсчёта до выхода со сцены, клавиша R начинает новый дубль.}}</p>
+            <button type="button" class="btn btn-small" id="takesOpen" disabled>{{No takes yet||Дублей пока нет}}</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="group" data-pro>
+          <legend>{{Look||Вид}}</legend>
+          <label class="row"><span>{{Font||Шрифт}}</span>
+            <select id="font">
+              <option value="Onest">Onest</option>
+              <option value="Golos Text">Golos Text</option>
+              <option value="PT Serif">PT Serif</option>
+              <option value="JetBrains Mono">JetBrains Mono</option>
+            </select></label>
+          <div class="row"><span>{{Weight||Начертание}}</span>
+            <div class="seg" id="weight" role="radiogroup" aria-label="{{Weight||Начертание}}">
+              <button type="button" data-v="400">{{Regular||Обычное}}</button><button type="button" data-v="600">{{Bold||Жирное}}</button>
+            </div></div>
+          <div class="row"><span>{{Theme||Тема}}</span>
+            <div class="seg" id="theme" role="radiogroup" aria-label="{{Theme||Тема}}">
+              <button type="button" data-v="dark">{{Dark||Тёмная}}</button><button type="button" data-v="light">{{Light||Светлая}}</button><button type="button" data-v="amber">{{Amber||Янтарь}}</button>
+            </div></div>
+          <div class="row"><span>{{Alignment||Выравнивание}}</span>
+            <div class="seg" id="align" role="radiogroup" aria-label="{{Alignment||Выравнивание}}">
+              <button type="button" data-v="orp" title="{{The focus letter always stays in one spot||Буква фокуса всегда в одной точке}}">{{Focus point||По фокусу}}</button><button type="button" data-v="center">{{Center||По центру}}</button>
+            </div></div>
+          <label class="switch"><span>{{Ticks above the focus letter||Засечки над буквой фокуса}}</span><input type="checkbox" id="guides"></label>
+          <label class="switch"><span>{{Block frame while reading||Рамка блока во время чтения}}</span><input type="checkbox" id="frame"></label>
+          <label class="switch"><span>{{Mirror, for a glass teleprompter||Зеркально, для суфлёра со стеклом}}</span><input type="checkbox" id="flip"></label>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>{{Start||Запуск}}</legend>
+          <label class="switch"><span>{{Beep during countdown||Бип на обратном отсчёте}}</span><input type="checkbox" id="beep"></label>
+          <div class="row" data-pro><span>{{Countdown||Обратный отсчёт}}</span>
+            <div class="seg" id="countdown" role="radiogroup" aria-label="{{Countdown||Обратный отсчёт}}">
+              <button type="button" data-v="0">{{off||нет}}</button><button type="button" data-v="3">{{3 s||3 с}}</button><button type="button" data-v="5">{{5 s||5 с}}</button>
+            </div></div>
+          <label class="switch" data-pro><span>{{Fullscreen||Во весь экран}}</span><input type="checkbox" id="fullscreen"></label>
+          <label class="switch" data-pro><span>{{Progress bar while reading||Полоска прогресса во время чтения}}</span><input type="checkbox" id="progress"></label>
+          <button type="button" class="link" id="reset">{{Reset settings||Сбросить настройки}}</button>
+        </fieldset>
+      </aside>
+    </main>
+
+    <footer class="about" id="about">
+{{#en}}
+      <div class="about-intro">
+        <h2>What is Sufler</h2>
+        <p>Sufler is a free online teleprompter for recording video. It shows your script one word at a time in a single spot on the screen, right under your camera, so your eyes don’t scan across lines and you keep eye contact with the lens. Speed, pauses and emphasis come from simple markup in the text, and you can record camera video right here in the browser. No sign-up: your text and settings stay on your device.</p>
+      </div>
+      <dl class="about-faq">
+        <div><dt>What is Sufler for?</dt><dd>For when you need to record a video, a pitch or a presentation quickly and there’s no time to memorize the script. Sufler shows the text word by word right under the camera, so you read without looking away and come across as if you were speaking in your own words.</dd></div>
+        <div><dt>Can the text be marked up automatically?</dt><dd>Yes. “Mark up automatically” has a ready-made prompt for ChatGPT, Gemini, Claude and other AI assistants, plus a Claude skill that also checks the result.</dd></div>
+        <div><dt>Where does the video go?</dt><dd>Only to your computer. Recording happens in the browser, takes download to your Downloads folder, and nothing is uploaded.</dd></div>
+        <div><dt>How do I put the text under the camera?</dt><dd>Pick the “Under camera” position or drag the word block while paused. Adjust the width and font size so your gaze barely leaves the lens.</dd></div>
+      </dl>
+      <p class="about-meta">Made by <a href="https://artemslizhik.com/">Artem Slizhik</a>. Free, no sign-up, no ads. <a href="/ru/" hreflang="ru" lang="ru">Русская версия</a></p>
+{{/en}}
+{{#ru}}
+      <div class="about-intro">
+        <h2>Что такое Суфлёр</h2>
+        <p>Суфлёр — бесплатный онлайн-телесуфлёр для записи видео. Он показывает текст выступления по одному слову в одной точке экрана, прямо под камерой, поэтому глаза не бегают по строчкам и взгляд остаётся в объективе. Скорость, паузы и акценты задаются разметкой в тексте, а видео с камеры можно записать тут же, в браузере. Регистрация не нужна: текст и настройки хранятся только у вас.</p>
+      </div>
+      <dl class="about-faq">
+        <div><dt>Для чего использовать Суфлёр?</dt><dd>Когда нужно быстро записать видео, питч или презентацию, а времени заучивать текст нет. Суфлёр показывает текст слово за словом прямо под камерой: вы читаете, не отводя взгляд, и выглядите так, будто говорите своими словами.</dd></div>
+        <div><dt>Можно ли разметить текст автоматически?</dt><dd>Да. В окне «Разметить автоматически» есть готовый промпт для ChatGPT, Gemini, Claude и других нейросетей и скилл для Claude, который ещё и проверяет результат.</dd></div>
+        <div><dt>Куда сохраняется видео?</dt><dd>Только к вам на компьютер. Запись идёт в браузере, дубли скачиваются в «Загрузки», на сервер ничего не отправляется.</dd></div>
+        <div><dt>Как поставить текст под камеру?</dt><dd>Выберите положение «Под камерой» или перетащите блок со словами мышью на паузе. Ширину блока и размер шрифта можно подобрать так, чтобы взгляд почти не отходил от объектива.</dd></div>
+      </dl>
+      <p class="about-meta">Сделал <a href="https://artemslizhik.com/">Artem Slizhik</a>. Бесплатно, без регистрации и рекламы. <a href="/" hreflang="en" lang="en">English version</a></p>
+{{/ru}}
+    </footer>
+  </div>
+
+  <!-- Автоматическая разметка: промпт для любой нейросети или скилл для Claude -->
+  <dialog class="dialog" id="skillDialog" aria-labelledby="skillTitle">
+    <div class="dialog-body">
+      <button type="button" class="dialog-close" data-dialog-close aria-label="{{Close||Закрыть}}"></button>
+      <h2 id="skillTitle">{{Mark up automatically||Разметка автоматически}}</h2>
+      <p class="dialog-lead">{{An AI decides where to pause, where to slow down or speed up, what to emphasize and where to stop. It doesn’t change your words. Paste the result into the editor.||Нейросеть сама решит, где нужна пауза, где замедлиться или ускориться, что выделить и где поставить стоп. Ваши слова она не меняет. Готовый текст вставьте в редактор.}}</p>
+
+      <div class="seg dialog-tabs" role="tablist" aria-label="{{Method||Способ}}">
+        <button type="button" role="tab" id="tabPrompt" aria-controls="panelPrompt" aria-selected="true">{{Any AI||Любая нейросеть}}</button><button type="button" role="tab" id="tabSkill" aria-controls="panelSkill" aria-selected="false">{{Claude skill||Скилл для Claude}}</button>
+      </div>
+
+      <section class="dialog-panel" id="panelPrompt" role="tabpanel" aria-labelledby="tabPrompt">
+        <p>{{Works in ChatGPT, Gemini, Claude or any other AI assistant, nothing to install. Copy the prompt, paste it into a chat and replace the placeholder at the end with your text. Or copy it together with the text from the editor.||Работает в ChatGPT, Gemini, Claude и любой другой нейросети, ничего устанавливать не нужно. Скопируйте промпт, вставьте его в чат и замените в конце заглушку на свой текст. Или скопируйте сразу вместе с текстом из редактора.}}</p>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-dark" id="copyPrompt">{{Copy prompt||Скопировать промпт}}</button>
+          <button type="button" class="btn" id="copyPromptWithText">{{Copy with my text||Скопировать с моим текстом}}</button>
+        </div>
+        <details class="prompt-preview">
+          <summary>{{View prompt||Посмотреть промпт}}</summary>
+{{#en}}
+          <pre id="promptText">You are an experienced speechwriter and voice coach. You are marking up a speech for Sufler (https://sufler.artemslizhik.com), a teleprompter for recording video: it shows the speech one word at a time in a single spot on the screen, and the pace is controlled by markup inside the text.
+
+## Markup syntax
+/  //  ///  — short (0.5 s), normal (1 s) and long (2 s) pause. As a separate word, with spaces around it.
+[PAUSE 1.5] — a pause of exact length in seconds.
+[STOP] — stops until the speaker presses Space.
+*word* or *two words* — emphasis: highlighted and shown a little longer.
+[SLOW] … [/SLOW] — a slower passage. [FAST] … [/FAST] — a faster passage. Always close them.
+[any text] — a stage direction: shown small above the next word, not read aloud. For example [smile], [look at the camera].
+# Heading — on its own line: a section. Not shown on screen; used to re-record takes part by part.
+
+Sufler already pauses on punctuation and blank lines and shows longer words for longer. Don’t put a pause after every comma: a manual pause belongs where the meaning needs a stop beyond the punctuation.
+
+## Rules
+1. Don’t change, add or remove words or punctuation. You may only add markup, split the text into paragraphs and insert section lines.
+2. First understand the arc: the opening, the problem, the solution, the key message, the call to action. The markup should bring out this structure, not cover the text evenly.
+3. Pauses: after a greeting (/), before the key point or an unexpected turn (//), after a strong number or fact (//), after a rhetorical question (//), at the “problem → solution” turn (//). Use the long /// rarely: before the ending or between major blocks. In a long sentence without punctuation, put / where the speaker can breathe. Rule of thumb: one manual pause per one or two sentences.
+4. Emphasis: one key word per paragraph, occasionally two. Numbers, the product name, a contrast word. Don’t emphasize whole phrases.
+5. [SLOW] — the key message, a key number, the call to action. Keep it short, within one sentence. [FAST] — asides, disclaimers, secondary details; if there are none, don’t use it at all.
+6. [STOP] — only where the speaker needs to do something: switch a slide, show a demo, ask the audience a question.
+7. Stage directions — 1–3 words, no more than two or three per minute of speech.
+8. Sections # — by logical blocks, titles of 1–3 words. Usually not needed for texts shorter than about 120 words.
+9. If the text already has Sufler markup, redo it according to these rules.
+10. Keep the speech in its original language and write your notes in that language too.
+
+## Response format
+1. The whole marked-up text in a single code block so it can be copied.
+2. One to three lines: what you did and why. If a target duration is given, estimate the length at 140 words per minute and suggest a speed setting.
+3. If there is anything to suggest, up to five tips: numbers with spaces as separators (for example “2 500 000” would show as three separate words), abbreviations and symbols (%, $, “e.g.”), sentences that are too long. Don’t apply the tips to the text, just list them.
+
+## Context
+Format: —
+Slides: —
+Target duration: —
+(A dash means “not specified”. You can replace it, for example: “investor pitch”, “yes”, “1:30”.)
+
+## Speech
+"""
+PASTE YOUR SPEECH HERE
+"""</pre>
+{{/en}}
+{{#ru}}
+          <pre id="promptText">Ты опытный спичрайтер и диктор. Размечаешь текст выступления для Суфлёра (https://sufler.artemslizhik.com/ru/). Это суфлёр для записи видео: он показывает речь по одному слову в одной точке экрана, а темп задаётся разметкой внутри текста.
+
+## Синтаксис разметки
+/  //  ///  — короткая (0,5 с), обычная (1 с) и длинная (2 с) пауза. Отдельным словом, через пробелы.
+[PAUSE 1.5] — пауза точной длины в секундах.
+[STOP] — остановка до нажатия пробела.
+*слово* или *два слова* — акцент: выделение цветом, показывается чуть дольше.
+[SLOW] … [/SLOW] — участок медленнее. [FAST] … [/FAST] — участок быстрее. Всегда закрывай.
+[любой текст] — ремарка: мелко над следующим словом, вслух не читается. Например [улыбнись], [в камеру].
+# Заголовок — отдельной строкой: раздел. На экране не показывается, нужен, чтобы перезаписывать дубли по частям.
+
+Суфлёр сам делает паузы на знаках препинания и пустых строках, а длинные слова показывает дольше. Не ставь паузу после каждой запятой: ручная пауза нужна там, где смысл требует остановки сверх пунктуации.
+
+## Правила
+1. Не меняй, не добавляй и не удаляй слова и знаки препинания. Можно только добавлять разметку, разбивать текст на абзацы и вставлять строки-разделы.
+2. Сначала пойми драматургию: где вступление, проблема, решение, главный тезис, призыв. Разметка должна подчёркивать структуру, а не равномерно покрывать текст.
+3. Паузы: после приветствия (/), перед главной мыслью или неожиданным поворотом (//), после сильной цифры или факта (//), после риторического вопроса (//), на стыке «проблема → решение» (//). Длинную /// ставь редко: перед финалом или между крупными блоками. В длинном предложении без знаков ставь / там, где можно вдохнуть. Ориентир: одна ручная пауза на одно-два предложения.
+4. Акценты: одно ключевое слово на абзац, изредка два. Цифры, название продукта, слово-контраст. Не выделяй целые фразы.
+5. [SLOW] — главный тезис, ключевая цифра, призыв к действию. Коротко, в пределах одного предложения. [FAST] — вводные, дисклеймеры, второстепенное; если такого нет, не ставь вовсе.
+6. [STOP] — только там, где говорящему нужно действие: сменить слайд, показать демо, задать вопрос залу.
+7. Ремарки — 1–3 слова, не больше двух-трёх на минуту речи.
+8. Разделы # — по логическим блокам, названия в 1–3 слова. Для текста короче примерно 120 слов обычно не нужны.
+9. Если в тексте уже есть разметка Суфлёра, переделай её по этим правилам.
+10. Текст выступления оставляй на его языке.
+
+## Формат ответа
+1. Размеченный текст целиком, одним блоком кода, чтобы его можно было скопировать.
+2. Одна-три строки: что и почему ты сделал. Если указана нужная длительность, оцени её при скорости 140 слов в минуту и подскажи, какую скорость поставить.
+3. Если есть что посоветовать, до пяти советов. Числа цифрами (например «2 500 000» покажется тремя отдельными словами), сокращения и символы (%, $, «т.е.»), слишком длинные предложения. Советы к тексту не применяй, только перечисли.
+
+## Контекст
+Формат: —
+Слайды: —
+Нужная длительность: —
+(Прочерк значит «не указано». Можно заменить, например: «питч инвесторам», «да», «1:30».)
+
+## Текст выступления
+"""
+ВСТАВЬТЕ СЮДА ТЕКСТ ВЫСТУПЛЕНИЯ
+"""</pre>
+{{/ru}}
+        </details>
+      </section>
+
+      <section class="dialog-panel" id="panelSkill" role="tabpanel" aria-labelledby="tabSkill" hidden>
+        <p>{{The skill does the same, but also checks itself with a script: it compares the words with the original, looks for unclosed tags and estimates the duration.||Скилл делает то же самое, но ещё и проверяет себя скриптом: сверяет слова с оригиналом, ищет незакрытые теги и считает длительность.}}</p>
+        <div class="dialog-actions">
+          <a class="btn btn-dark" href="/sufler-markup.zip" download>{{Download skill, .zip||Скачать скилл, .zip}}</a>
+        </div>
+        <dl class="dialog-steps">
+          <dt>Claude Code</dt>
+          <dd>{{Unzip the archive into your skills folder:||Распакуйте архив в папку скиллов:}}<code class="code-block">unzip sufler-markup.zip -d ~/.claude/skills/</code>{{Then send your text asking to “mark it up for Sufler”, or run||Потом пришлите текст со словами «разметь для суфлёра» или вызовите}} <code>/sufler-markup</code> {{with the text.||и текст.}}</dd>
+          <dt>{{Claude.ai and the app||Claude.ai и приложение}}</dt>
+          <dd>{{In Claude settings, open the skills section and upload the whole archive. Then send your text asking to “mark it up for Sufler”.||В настройках Claude откройте раздел со скиллами и загрузите архив целиком. Потом пришлите текст со словами «разметь для суфлёра».}}</dd>
+        </dl>
+      </section>
+    </div>
+  </dialog>
+
+  <!-- Записанные дубли -->
+  <dialog class="dialog dialog-wide" id="takesDialog" aria-labelledby="takesTitle">
+    <div class="dialog-body">
+      <button type="button" class="dialog-close" data-dialog-close aria-label="{{Close||Закрыть}}"></button>
+      <h2 id="takesTitle">{{Takes||Дубли}}</h2>
+      <p class="dialog-lead">{{Takes are kept only in this tab. Download the ones you need before closing the page: files go to your Downloads folder.||Дубли хранятся только в этой вкладке. Скачайте нужные, пока не закрыли страницу: файлы попадут в папку «Загрузки».}}</p>
+      <ol class="takes" id="takesList"></ol>
+    </div>
+  </dialog>
+
+  <!-- Сцена чтения -->
+  <div class="stage" id="stage" hidden>
+    <video class="cam-layer" id="stageCam" muted playsinline></video>
+    <div class="stage-inner" id="stageInner">
+      <div class="block" id="block">
+        <div class="cue" id="cue"></div>
+        <div class="line" id="line">
+          <div class="word" id="word"></div>
+          <i class="guide guide-top" aria-hidden="true"></i>
+          <i class="guide guide-bottom" aria-hidden="true"></i>
+        </div>
+        <div class="pausebar" id="pausebar"><i></i></div>
+        <span class="handle handle-l" data-handle="l" aria-hidden="true"></span>
+        <span class="handle handle-r" data-handle="r" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div class="stage-progress" id="stageProgress"><i></i></div>
+    <div class="rec-badge" id="recBadge" aria-hidden="true"><i></i><span id="recTime">0:00</span></div>
+    <div class="toast" id="toast" role="status"></div>
+
+    <div class="hud" id="hud">
+      <div class="hud-top">
+        <div class="hud-where" id="hudWhere"></div>
+        <button type="button" class="hud-btn" id="exitStage">{{Exit||Выйти}} <kbd>Esc</kbd></button>
+      </div>
+      <div class="hud-panel">
+        <div class="hud-sections" id="hudSections"></div>
+        <p class="hud-context" id="hudContext"></p>
+        <div class="hud-controls">
+          <button type="button" class="hud-btn hud-play" id="hudPlay">{{Continue||Продолжить}} <kbd>{{Space||Пробел}}</kbd></button>
+          <button type="button" class="hud-btn" id="hudBackSentence">{{Back to sentence start||К началу предложения}} <kbd>⇧←</kbd></button>
+          <button type="button" class="hud-btn" id="hudRestart">{{From the top||С начала}} <kbd>R</kbd></button>
+        </div>
+        <p class="hud-keys"><kbd>←</kbd><kbd>→</kbd> {{word||слово}} · <kbd>↑</kbd><kbd>↓</kbd> {{speed||скорость}} · <kbd>+</kbd><kbd>−</kbd> {{font||шрифт}} · <kbd>[</kbd><kbd>]</kbd> {{width||ширина}} · <kbd>F</kbd> {{fullscreen||весь экран}}<span data-pro> · <kbd>M</kbd> {{mirror||зеркало}}</span></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/parser.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

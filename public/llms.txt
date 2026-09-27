@@ -1,36 +1,43 @@
-# Суфлёр
+# Sufler
 
-> Суфлёр (https://sufler.artemslizhik.com) — бесплатный онлайн-телесуфлёр для записи видео. Он показывает текст выступления по одному слову в одной точке экрана, прямо под камерой, чтобы при чтении взгляд не уходил от объектива. Темп, паузы и акценты задаются разметкой внутри текста, видео с камеры записывается прямо в браузере.
+> Sufler (https://sufler.artemslizhik.com) is a free online teleprompter for recording video. It shows your script one word at a time in a single spot on the screen, right under the camera, so you keep eye contact with the lens while reading. Pace, pauses and emphasis come from markup inside the text, and camera video records right in the browser.
 
-Суфлёр работает целиком в браузере: без регистрации, без сервера и без рекламы. Текст, настройки и записанные дубли остаются на компьютере пользователя. Интерфейс на русском, читать можно текст на любом языке.
+Sufler runs entirely in the browser: no sign-up, no server, no ads. Text, settings and recorded takes stay on the user's device. The interface is available in English (https://sufler.artemslizhik.com/) and Russian (https://sufler.artemslizhik.com/ru/, where the product is called «Суфлёр»); scripts can be in any language.
 
-## Возможности
+## What it is for
 
-- Слова по одному в фиксированной точке экрана; буква фокуса (ORP) всегда на одном месте, поэтому глаза не двигаются даже внутри слова
-- Скорость в словах в минуту (60–360) и оценка длительности выступления при текущих настройках
-- Разметка темпа прямо в тексте: паузы, акценты, замедление и ускорение участков, стопы, ремарки, разделы
-- Ширина, размер шрифта и положение блока со словами, пресет «Под камерой», перетаскивание мышью
-- Обратный отсчёт со звуковыми сигналами, режимы «Простой» и «Про», зеркальный режим для суфлёра со стеклом
-- Запись видео с камеры и микрофона в браузере (MP4 или WebM), камера фоном под текстом, дубли со скачиванием
-- Автоматическая разметка: промпт для любой нейросети и скилл для Claude
+- Recording a video, a pitch or a presentation quickly when there is no time to memorize the script
+- Keeping eye contact with the camera while reading, instead of scanning lines on the screen
 
-## Разметка текста
+## Features
 
-- `/`, `//`, `///` — короткая (0,5 с), обычная (1 с) и длинная (2 с) пауза
-- `[PAUSE 2.5]` — пауза точной длины в секундах
-- `[STOP]` — остановка до нажатия пробела, например чтобы сменить слайд
-- `*слово*` — акцент: слово выделено цветом и показывается чуть дольше
-- `[SLOW] … [/SLOW]`, `[FAST] … [/FAST]` — участок медленнее (×0,75) или быстрее (×1,3)
-- `[любой текст]` — ремарка над словом, вслух не читается, например `[улыбнись]`
-- `# Заголовок` — раздел для перехода между дублями, на экране не показывается
-- Знаки препинания и пустые строки добавляют паузы автоматически
+- One word at a time in a fixed spot; the focus letter (ORP) always stays in the same place, so the eyes don't move even within a word
+- Speed in words per minute (60–360) and an estimate of how long the talk will take with the current settings
+- Pace markup right in the text: pauses, emphasis, slower and faster passages, stops, stage directions, sections
+- Block width, font size and position, an "Under camera" preset, drag-and-drop placement
+- Countdown with beeps, Simple and Pro modes, mirror mode for glass teleprompters
+- Camera and microphone recording in the browser (MP4 or WebM), camera behind the text, takes with download
+- Automatic markup: a prompt for any AI assistant and a Claude skill
 
-## Ссылки
+## Markup
 
-- [Суфлёр](https://sufler.artemslizhik.com/): само приложение, открывается в браузере
-- [Полная справка по разметке](https://sufler.artemslizhik.com/llms-full.txt): правила разметки и готовый промпт, по которому любая нейросеть размечает текст для Суфлёра
-- [Скилл для Claude](https://sufler.artemslizhik.com/sufler-markup.zip): автоматическая разметка текста с проверкой результата
+- `/`, `//`, `///` — short (0.5 s), normal (1 s) and long (2 s) pause
+- `[PAUSE 2.5]` — a pause of exact length in seconds
+- `[STOP]` — stops until Space is pressed, for example to switch slides
+- `*word*` — emphasis: highlighted and shown a little longer
+- `[SLOW] … [/SLOW]`, `[FAST] … [/FAST]` — slower (×0.75) or faster (×1.3) passage
+- `[any text]` — a stage direction shown above the word, not read aloud, for example `[smile]`
+- `# Heading` — a section for jumping between takes, not shown on screen
+- Punctuation and blank lines add pauses automatically
 
-## Автор
+## Links
+
+- [Sufler](https://sufler.artemslizhik.com/): the app, opens in the browser
+- [Sufler in Russian](https://sufler.artemslizhik.com/ru/): the same app with a Russian interface
+- [Full markup reference](https://sufler.artemslizhik.com/llms-full.txt): markup rules and a ready-made prompt any AI assistant can use to mark up a speech for Sufler
+- [Markup prompt in Russian](https://sufler.artemslizhik.com/ru/llms-full.txt)
+- [Claude skill](https://sufler.artemslizhik.com/sufler-markup.zip): automatic markup with result checking
+
+## Author
 
 - [Artem Slizhik](https://artemslizhik.com/)

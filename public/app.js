@@ -6,6 +6,112 @@
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const STORE = 'sufler.v1';
 
+  // ——— Язык интерфейса: берётся из <html lang>, страницы собираются из src/index.html ———
+  const LANG = document.documentElement.lang === 'ru' ? 'ru' : 'en';
+  const ruPlural = (n, forms) => {
+    const a = n % 10, b = n % 100;
+    return forms[a === 1 && b !== 11 ? 0 : a >= 2 && a <= 4 && (b < 12 || b > 14) ? 1 : 2];
+  };
+  const I18N = {
+    en: {
+      words: (n) => `${n} ${n === 1 ? 'word' : 'words'}`,
+      stops: (n) => `, plus ${n} ${n === 1 ? 'stop' : 'stops'}`,
+      dur: (m, s) => (m ? `${m} min ${s} s` : `${s} s`),
+      stats: (dur, words, stops) => `About <b>${dur}</b>, ${words}${stops}`,
+      durationNote: (words, wpm, stops) => `${words} at ${wpm} wpm${stops}`,
+      addText: 'Add text to start',
+      noText: 'No text yet',
+      wpm: (v) => `${v} wpm`,
+      decimal: '.',
+      wrapPlaceholder: 'text',
+      sectionPlaceholder: 'Section',
+      sampleWord: 'Sufler',
+      previewPlay: 'Check pace',
+      previewStop: 'Stop',
+      statusEnd: 'The end',
+      statusStop: 'Stop. Press Space to continue',
+      hudWhere: (n, total, left, wpm) => `<span>Word ${n} of ${total}</span>&emsp;<span>${left} left</span>&emsp;<span>${wpm} wpm</span>`,
+      again: 'Play again ',
+      cont: 'Continue ',
+      camFailed: (msg) => `Camera unavailable, reading without recording: ${msg}`,
+      toastSpeed: (v) => `Speed ${v} words per minute`,
+      toastFont: (v) => `Font ${v} px`,
+      toastWidth: (v) => `Width ${v} px`,
+      toastPos: (x, y) => `Position ${x} % × ${y} %`,
+      mirrorOn: 'Mirrored',
+      mirrorOff: 'Not mirrored',
+      recErr: { NotAllowedError: 'camera access is blocked in the browser settings', NotFoundError: 'no camera or microphone found', NotReadableError: 'the camera is busy in another app', unknown: 'unknown error' },
+      camError: (msg) => `Couldn’t turn on the camera: ${msg}.`,
+      camera: 'Camera',
+      microphone: 'Microphone',
+      recStatus: (paused, t) => `${paused ? 'Recording paused' : 'Recording'}, ${t}`,
+      camOn: 'Turn camera off',
+      camOff: 'Turn camera on',
+      kb: 'KB',
+      mb: 'MB',
+      downloaded: ', downloaded',
+      takesBtn: (n) => (n ? `Takes: ${n}` : 'No takes yet'),
+      takesEmpty: 'Nothing here yet. Turn on recording and start reading.',
+      take: (n) => `Take ${n}`,
+      download: 'Download',
+      del: 'Delete',
+      confirmDel: 'Delete for good?',
+      noRecorder: 'This browser can’t record video',
+      promptPlaceholder: 'PASTE YOUR SPEECH HERE',
+      copied: 'Copied',
+      copyFailed: 'Couldn’t copy',
+    },
+    ru: {
+      words: (n) => `${n} ${ruPlural(n, ['слово', 'слова', 'слов'])}`,
+      stops: (n) => `, плюс ${n} ${ruPlural(n, ['остановка', 'остановки', 'остановок'])}`,
+      dur: (m, s) => (m ? `${m} мин ${s} с` : `${s} с`),
+      stats: (dur, words, stops) => `Около <b>${dur}</b>, ${words}${stops}`,
+      durationNote: (words, wpm, stops) => `${words} при ${wpm} сл/мин${stops}`,
+      addText: 'Добавьте текст, чтобы начать',
+      noText: 'Текста пока нет',
+      wpm: (v) => `${v} сл/мин`,
+      decimal: ',',
+      wrapPlaceholder: 'текст',
+      sectionPlaceholder: 'Раздел',
+      sampleWord: 'Суфлёр',
+      previewPlay: 'Проверить темп',
+      previewStop: 'Стоп',
+      statusEnd: 'Конец',
+      statusStop: 'Стоп. Пробел — дальше',
+      hudWhere: (n, total, left, wpm) => `<span>Слово ${n} из ${total}</span>&emsp;<span>осталось ${left}</span>&emsp;<span>${wpm} сл/мин</span>`,
+      again: 'Ещё раз ',
+      cont: 'Продолжить ',
+      camFailed: (msg) => `Камера недоступна, читаем без записи: ${msg}`,
+      toastSpeed: (v) => `Скорость ${v} слов в минуту`,
+      toastFont: (v) => `Шрифт ${v} px`,
+      toastWidth: (v) => `Ширина ${v} px`,
+      toastPos: (x, y) => `Позиция ${x} % × ${y} %`,
+      mirrorOn: 'Зеркально',
+      mirrorOff: 'Без зеркала',
+      recErr: { NotAllowedError: 'доступ к камере запрещён в настройках браузера', NotFoundError: 'камера или микрофон не найдены', NotReadableError: 'камера занята другим приложением', unknown: 'неизвестная ошибка' },
+      camError: (msg) => `Не удалось включить камеру: ${msg}.`,
+      camera: 'Камера',
+      microphone: 'Микрофон',
+      recStatus: (paused, t) => `${paused ? 'Запись на паузе' : 'Идёт запись'}, ${t}`,
+      camOn: 'Выключить камеру',
+      camOff: 'Включить камеру',
+      kb: 'КБ',
+      mb: 'МБ',
+      downloaded: ', скачан',
+      takesBtn: (n) => (n ? `Дубли: ${n}` : 'Дублей пока нет'),
+      takesEmpty: 'Пока пусто. Включите запись и начните чтение.',
+      take: (n) => `Дубль ${n}`,
+      download: 'Скачать',
+      del: 'Удалить',
+      confirmDel: 'Точно удалить?',
+      noRecorder: 'Этот браузер не умеет записывать видео',
+      promptPlaceholder: 'ВСТАВЬТЕ СЮДА ТЕКСТ ВЫСТУПЛЕНИЯ',
+      copied: 'Скопировано',
+      copyFailed: 'Не удалось скопировать',
+    },
+  };
+  const T = I18N[LANG];
+
   const DEFAULTS = {
     wpm: 140, chunk: 1, punctFactor: 1, lengthAware: true,
     pauses: { short: 0.5, medium: 1, long: 2 },
@@ -20,7 +126,23 @@
   const SIMPLE_KEYS = ['mode', 'wpm', 'fontSize', 'width', 'posX', 'posY', 'beep', 'record', 'camId', 'micId', 'selfView', 'recPause'];
   const POS_PRESETS = { camera: [50, 16], center: [50, 50] };
 
-  const DEMO = `# Вступление
+  const DEMO_EN = `# Intro
+Hi! / This is Sufler, // and in one minute I’ll show you how to record video *without your eyes drifting*.
+
+[look at the camera]
+Words appear one at a time, / always in the same spot — right under the camera. [PAUSE-SHORT] Your eyes stay put, / and viewers feel you’re talking to them.
+
+# How to mark up
+Pauses are slashes: / short, // normal /// and long.
+Key words go between asterisks — *like this*.
+[SLOW] A tricky idea can be read more slowly, [/SLOW] [FAST] and the obvious part can go faster. [/FAST]
+
+[STOP]
+# Wrap-up
+Need to switch slides? / Add a stop, and reading waits until you press Space. [PAUSE 1.5]
+Thanks for watching! [smile]`;
+
+  const DEMO_RU = `# Вступление
 Привет! / Это Суфлёр, // и за минуту я покажу, как записывать видео *без бегающего взгляда*.
 
 [смотри в камеру]
@@ -35,6 +157,7 @@
 # Финал
 Нужно переключить слайд? / Поставьте стоп, и чтение подождёт, пока вы не нажмёте пробел. [PAUSE 1.5]
 Спасибо, что досмотрели! [улыбнись]`;
+  const DEMO = LANG === 'ru' ? DEMO_RU : DEMO_EN;
 
   let S = structuredClone(DEFAULTS);
   let C = S; // действующие настройки с учётом режима
@@ -75,13 +198,9 @@
   }
 
   // ——— Форматирование ———
-  const plural = (n, forms) => {
-    const a = n % 10, b = n % 100;
-    return forms[a === 1 && b !== 11 ? 0 : a >= 2 && a <= 4 && (b < 12 || b > 14) ? 1 : 2];
-  };
   const fmtDur = (ms) => {
     const s = Math.round(ms / 1000), m = Math.floor(s / 60), r = s % 60;
-    return m ? `${m} мин ${r} с` : `${r} с`;
+    return T.dur(m, r);
   };
   const fmtClock = (ms) => {
     const s = Math.max(0, Math.round(ms / 1000));
@@ -128,19 +247,19 @@
     const p = getParsed();
     const el = $('stats');
     if (!p.wordCount) {
-      el.textContent = 'Добавьте текст, чтобы начать';
+      el.textContent = T.addText;
       $('durationValue').textContent = '0:00';
-      $('durationNote').textContent = 'Текста пока нет';
+      $('durationNote').textContent = T.noText;
       return;
     }
     const frames = P.buildFrames(p, C.chunk);
     let total = 0, stops = 0;
     for (const f of frames) { total += P.frameMs(f, C); if (f.type === 'stop') stops++; }
-    const words = `${p.wordCount} ${plural(p.wordCount, ['слово', 'слова', 'слов'])}`;
-    const stopsNote = stops ? `, плюс ${stops} ${plural(stops, ['остановка', 'остановки', 'остановок'])}` : '';
-    el.innerHTML = `Около <b>${fmtDur(total)}</b>, ${words}${stopsNote}`;
+    const words = T.words(p.wordCount);
+    const stopsNote = stops ? T.stops(stops) : '';
+    el.innerHTML = T.stats(fmtDur(total), words, stopsNote);
     $('durationValue').textContent = fmtClock(total);
-    $('durationNote').textContent = `${words} при ${C.wpm} сл/мин${stopsNote}`;
+    $('durationNote').textContent = T.durationNote(words, C.wpm, stopsNote);
   }
 
   function insertText(str, selectFrom, selectTo) {
@@ -172,20 +291,20 @@
     } else if (btn.dataset.wrap) {
       const [before, after] = btn.dataset.wrap.split('|');
       const sel = value.slice(s, eIdx);
-      const body = sel || 'текст';
+      const body = sel || T.wrapPlaceholder;
       insertText(before + body + after, before.length, before.length + body.length);
     } else if (btn.dataset.line) {
       const lineStart = value.lastIndexOf('\n', s - 1) + 1;
       ta.setSelectionRange(lineStart, lineStart);
-      const str = btn.dataset.line + 'Раздел\n';
-      insertText(str, btn.dataset.line.length, btn.dataset.line.length + 6);
+      const str = btn.dataset.line + T.sectionPlaceholder + '\n';
+      insertText(str, btn.dataset.line.length, btn.dataset.line.length + T.sectionPlaceholder.length);
     }
   }
 
   // ——— Настройки ———
   const RANGES = {
-    wpm: (v) => `${v} сл/мин`,
-    punctFactor: (v) => `×${v.toFixed(1).replace('.', ',')}`,
+    wpm: (v) => T.wpm(v),
+    punctFactor: (v) => `×${v.toFixed(1).replace('.', T.decimal)}`,
     width: (v) => `${v} px`,
     fontSize: (v) => `${v} px`,
     posX: (v) => `${v} %`,
@@ -370,7 +489,7 @@
       else { el.className = 'word'; el.textContent = ''; }
       return;
     }
-    const first = getParsed().tokens.find((t) => t.type === 'word') || { text: 'Суфлёр', emph: false };
+    const first = getParsed().tokens.find((t) => t.type === 'word') || { text: T.sampleWord, emph: false };
     drawWords(el, [first], C.fontSize * k, (C.width - 32) * k);
   }
 
@@ -392,7 +511,7 @@
     if (!list.length) return;
     Object.assign(preview, { list, i: 0 });
     $('monitor').classList.add('live');
-    $('monitorPlay').textContent = 'Стоп';
+    $('monitorPlay').textContent = T.previewStop;
     stepPreview();
   }
 
@@ -407,7 +526,7 @@
     clearTimeout(preview.timer);
     preview.frame = null;
     $('monitor').classList.remove('live');
-    $('monitorPlay').textContent = 'Проверить темп';
+    $('monitorPlay').textContent = T.previewPlay;
     renderMonitor();
   }
 
@@ -482,13 +601,13 @@
       drawStatus(wordEl, String(Math.max(1, Math.ceil(countdownLeft / 1000))), 'countdown');
       wordEl.style.fontSize = C.fontSize + 'px';
     } else if (state === 'ended') {
-      drawStatus(wordEl, 'Конец', 'status');
+      drawStatus(wordEl, T.statusEnd, 'status');
     } else if (!f) {
       drawStatus(wordEl, '', 'status');
     } else if (f.type === 'words') {
       drawWords(wordEl, f.words, C.fontSize, C.width - 32);
     } else if (f.type === 'stop') {
-      drawStatus(wordEl, 'Стоп. Пробел — дальше', 'status');
+      drawStatus(wordEl, T.statusStop, 'status');
     } else {
       drawStatus(wordEl, '', 'status');
       pausebarFill.style.transform = `scaleX(${1 - frameElapsed / Math.max(1, P.frameMs(f, C))})`;
@@ -658,7 +777,7 @@
     const passed = cum[idx] + frameElapsed;
     const left = (cum[frames.length] || 0) - passed;
     const recNote = rec.current ? `&emsp;<span class="hud-rec" id="hudRec">${recStatus()}</span>` : '';
-    $('hudWhere').innerHTML = `<span>Слово ${Math.min(totalWords, wordIdx[idx] + 1)} из ${totalWords}</span>&emsp;<span>осталось ${fmtClock(left)}</span>&emsp;<span>${C.wpm} сл/мин</span>${recNote}`;
+    $('hudWhere').innerHTML = T.hudWhere(Math.min(totalWords, wordIdx[idx] + 1), totalWords, fmtClock(left), C.wpm) + recNote;
 
     const p = getParsed();
     $('hudSections').innerHTML = p.sections.map((s, i) =>
@@ -671,7 +790,7 @@
       ctx.innerHTML = words.map((w) => current.has(w) ? `<span class="cur">${esc(w.text)}</span>` : esc(w.text)).join(' ');
     } else ctx.textContent = '';
 
-    $('hudPlay').firstChild.textContent = state === 'ended' ? 'Ещё раз ' : 'Продолжить ';
+    $('hudPlay').firstChild.textContent = state === 'ended' ? T.again : T.cont;
   }
 
   let toastTimer = 0;
@@ -724,7 +843,7 @@
     if (C.fullscreen && !document.fullscreenElement && stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
     requestWakeLock();
     startPlayback(true);
-    if (recFailed) toast(`Камера недоступна, читаем без записи: ${recErrorText(recFailed)}`);
+    if (recFailed) toast(T.camFailed(recErrorText(recFailed)));
     lastNow = performance.now();
     stopLoop();
     const loop = (now) => { raf = requestAnimationFrame(loop); tick(now); };
@@ -782,16 +901,16 @@
     else if (k === 'Home') goTo(findWords(0, 1));
     else if (k === 'ArrowUp' || k === 'ArrowDown') {
       S.wpm = clamp(C.wpm + (k === 'ArrowUp' ? 10 : -10), 60, 360);
-      stageSettingChanged(`Скорость ${C.wpm} слов в минуту`);
+      stageSettingChanged(T.toastSpeed(C.wpm));
     } else if (c === 'Equal' || c === 'Minus' || c === 'NumpadAdd' || c === 'NumpadSubtract') {
       S.fontSize = clamp(C.fontSize + (c === 'Equal' || c === 'NumpadAdd' ? 4 : -4), 24, 220);
-      stageSettingChanged(`Шрифт ${C.fontSize} px`);
+      stageSettingChanged(T.toastFont(C.fontSize));
     } else if (c === 'BracketRight' || c === 'BracketLeft') {
       S.width = clamp(C.width + (c === 'BracketRight' ? 20 : -20), 160, 2400);
-      stageSettingChanged(`Ширина ${C.width} px`);
+      stageSettingChanged(T.toastWidth(C.width));
     } else if (c === 'KeyR') restart();
     else if (c === 'KeyF') toggleFullscreen();
-    else if (c === 'KeyM' && S.mode === 'pro') { S.flip = !S.flip; stageSettingChanged(C.flip ? 'Зеркально' : 'Без зеркала'); }
+    else if (c === 'KeyM' && S.mode === 'pro') { S.flip = !S.flip; stageSettingChanged(C.flip ? T.mirrorOn : T.mirrorOff); }
     else handled = false;
     if (handled) e.preventDefault();
   }
@@ -827,7 +946,7 @@
     const d = drag;
     drag = null;
     stage.classList.remove('dragging');
-    if (d.moved) stageSettingChanged(d.mode === 'move' ? `Позиция ${C.posX} % × ${C.posY} %` : `Ширина ${C.width} px`);
+    if (d.moved) stageSettingChanged(d.mode === 'move' ? T.toastPos(C.posX, C.posY) : T.toastWidth(C.width));
     else togglePlay();
   }
 
@@ -868,16 +987,13 @@
   }
 
   function recErrorText(err) {
-    if (err && err.name === 'NotAllowedError') return 'доступ к камере запрещён в настройках браузера';
-    if (err && err.name === 'NotFoundError') return 'камера или микрофон не найдены';
-    if (err && err.name === 'NotReadableError') return 'камера занята другим приложением';
-    return (err && err.message) || 'неизвестная ошибка';
+    return (err && T.recErr[err.name]) || (err && err.message) || T.recErr.unknown;
   }
 
   function showRecError(err) {
     const el = $('recError');
     el.hidden = !err;
-    el.textContent = err ? `Не удалось включить камеру: ${recErrorText(err)}.` : '';
+    el.textContent = err ? T.camError(recErrorText(err)) : '';
   }
 
   async function getStream() {
@@ -923,8 +1039,8 @@
       const ids = list.map((d) => d.deviceId);
       sel.value = [track && track.getSettings().deviceId, current, ids[0]].find((id) => id && ids.includes(id));
     };
-    fill($('camSelect'), 'videoinput', 'video', C.camId, 'Камера');
-    fill($('micSelect'), 'audioinput', 'audio', C.micId, 'Микрофон');
+    fill($('camSelect'), 'videoinput', 'video', C.camId, T.camera);
+    fill($('micSelect'), 'audioinput', 'audio', C.micId, T.microphone);
   }
 
   function startMeter() {
@@ -994,7 +1110,7 @@
 
   function recStatus() {
     const paused = rec.current && rec.current.recorder.state !== 'recording';
-    return `${paused ? 'Запись на паузе' : 'Идёт запись'}, ${fmtClock(recElapsed())}`;
+    return T.recStatus(paused, fmtClock(recElapsed()));
   }
 
   function recElapsed() {
@@ -1038,34 +1154,34 @@
     if (!stage.hidden) attachCam($('stageCam'), stage);
     const on = !!rec.stream;
     $('camPreview').classList.toggle('on', on);
-    $('camToggle').textContent = on ? 'Выключить камеру' : 'Включить камеру';
+    $('camToggle').textContent = on ? T.camOn : T.camOff;
   }
 
   const fmtSize = (b) => {
     const mb = b / 1048576;
-    if (mb < 1) return `${Math.max(1, Math.round(b / 1024))} КБ`;
-    return mb >= 10 ? `${Math.round(mb)} МБ` : `${mb.toFixed(1).replace('.', ',')} МБ`;
+    if (mb < 1) return `${Math.max(1, Math.round(b / 1024))} ${T.kb}`;
+    return mb >= 10 ? `${Math.round(mb)} ${T.mb}` : `${mb.toFixed(1).replace('.', T.decimal)} ${T.mb}`;
   };
 
   function takeMeta(t) {
-    return `${fmtClock(t.duration)}, ${fmtSize(t.size)}, ${t.ext.toUpperCase()}${t.saved ? ', скачан' : ''}`;
+    return `${fmtClock(t.duration)}, ${fmtSize(t.size)}, ${t.ext.toUpperCase()}${t.saved ? T.downloaded : ''}`;
   }
 
   function renderTakes() {
     const btn = $('takesOpen');
     btn.disabled = !rec.takes.length;
-    btn.textContent = rec.takes.length ? `Дубли: ${rec.takes.length}` : 'Дублей пока нет';
+    btn.textContent = T.takesBtn(rec.takes.length);
     const list = $('takesList');
-    if (!rec.takes.length) { list.innerHTML = '<li class="takes-empty">Пока пусто. Включите запись и начните чтение.</li>'; return; }
+    if (!rec.takes.length) { list.innerHTML = `<li class="takes-empty">${T.takesEmpty}</li>`; return; }
     list.innerHTML = rec.takes.slice().reverse().map((t) => `
       <li class="take" data-n="${t.n}">
         <video src="${t.url}" controls preload="metadata" playsinline></video>
         <div class="take-info">
-          <b>Дубль ${t.n}</b>
+          <b>${T.take(t.n)}</b>
           <span class="take-meta">${takeMeta(t)}</span>
           <div class="take-actions">
-            <a class="btn btn-dark btn-small" href="${t.url}" download="${esc(t.name)}" data-save>Скачать</a>
-            <button type="button" class="btn btn-small" data-delete>Удалить</button>
+            <a class="btn btn-dark btn-small" href="${t.url}" download="${esc(t.name)}" data-save>${T.download}</a>
+            <button type="button" class="btn btn-small" data-delete>${T.del}</button>
           </div>
         </div>
       </li>`).join('');
@@ -1090,8 +1206,8 @@
       // Удаление без возврата: подтверждаем вторым нажатием
       if (!b.classList.contains('confirm')) {
         b.classList.add('confirm');
-        b.textContent = 'Точно удалить?';
-        setTimeout(() => { b.classList.remove('confirm'); b.textContent = 'Удалить'; }, 3000);
+        b.textContent = T.confirmDel;
+        setTimeout(() => { b.classList.remove('confirm'); b.textContent = T.del; }, 3000);
         return;
       }
       URL.revokeObjectURL(t.url);
@@ -1103,7 +1219,7 @@
   function bindRecording() {
     if (!canRecord) {
       $('record').disabled = true;
-      $('record').closest('.switch').title = 'Этот браузер не умеет записывать видео';
+      $('record').closest('.switch').title = T.noRecorder;
     }
     $('record').addEventListener('change', () => {
       if (S.record) { rec.previewWanted = true; getStream().catch(() => {}); } else { rec.previewWanted = false; releaseStream(); showRecError(null); }
@@ -1126,7 +1242,7 @@
   }
 
   // ——— Промпт для любой нейросети ———
-  const PROMPT_PLACEHOLDER = 'ВСТАВЬТЕ СЮДА ТЕКСТ ВЫСТУПЛЕНИЯ';
+  const PROMPT_PLACEHOLDER = T.promptPlaceholder;
 
   async function copyText(str) {
     try {
@@ -1147,7 +1263,7 @@
 
   function flashCopied(btn, ok) {
     const label = btn.dataset.label || (btn.dataset.label = btn.textContent);
-    btn.textContent = ok ? 'Скопировано' : 'Не удалось скопировать';
+    btn.textContent = ok ? T.copied : T.copyFailed;
     btn.classList.toggle('copied', ok);
     clearTimeout(btn._t);
     btn._t = setTimeout(() => { btn.textContent = label; btn.classList.remove('copied'); }, 1600);
@@ -1187,6 +1303,14 @@
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); openStage(true); }
     });
     $('toolbar').addEventListener('click', onToolbar);
+    const langLink = $('langSwitch');
+    langLink.addEventListener('click', () => { try { localStorage.setItem('sufler.lang', langLink.dataset.lang); } catch (_) { /* нет доступа */ } });
+    let savedLang = null;
+    try { savedLang = localStorage.getItem('sufler.lang'); } catch (_) { /* нет доступа */ }
+    if (LANG === 'en' && !savedLang && (navigator.languages || [navigator.language]).some((l) => /^ru\b/i.test(l))) {
+      langLink.textContent = langLink.title;
+      langLink.classList.add('suggest');
+    }
     $('start').addEventListener('click', () => openStage(false));
     $('startCursor').addEventListener('click', () => openStage(true));
     $('monitorPlay').addEventListener('click', () => (preview.frame ? stopPreview() : startPreview()));
