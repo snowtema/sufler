@@ -297,6 +297,12 @@
     "fpsUnsupported": "Deine Kamera schafft diese Bildrate nicht",
     "qualityUnsupported": "Deine Kamera nimmt nicht in dieser Auflösung auf",
     "statusStopTouch": "Stopp. Tippen zum Weiterlesen",
-    "save": "Sichern"
+    "save": "Sichern",
+    "camFallback": "Die gewählte Kamera oder das Mikrofon ist nicht verfügbar, daher wird das Standardgerät verwendet.",
+    "camEnded": "Die Kamera ist aus: Sie wurde getrennt oder von einer anderen App belegt. Der Take ist bis hierhin gesichert.",
+    "camMuted": "Das System hat die Kamera pausiert. Das Video kann einfrieren, bis sie zurück ist.",
+    "takesLeadPersist": "Takes bleiben in diesem Browser auf deinem Gerät, bis du sie löschst – auch nach einem Neuladen. Lade die benötigten herunter oder sichere sie.",
+    "recovered": ", wiederhergestellt",
+    "lowSpace": "Im Browser ist wenig Speicher frei: Ein langer Take passt vielleicht nicht."
   }
 }

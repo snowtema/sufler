@@ -297,6 +297,12 @@
     "fpsUnsupported": "La fotocamera non supporta questa frequenza di fotogrammi",
     "qualityUnsupported": "La fotocamera non registra a questa risoluzione",
     "statusStopTouch": "Stop. Tocca per continuare",
-    "save": "Salva"
+    "save": "Salva",
+    "camFallback": "La fotocamera o il microfono scelti non sono disponibili: si usano quelli predefiniti.",
+    "camEnded": "La fotocamera si è spenta: è stata scollegata o un’altra app l’ha occupata. La ripresa è salvata fino a questo punto.",
+    "camMuted": "Il sistema ha messo in pausa la fotocamera. Il video può bloccarsi finché non torna.",
+    "takesLeadPersist": "Le riprese restano in questo browser sul tuo dispositivo finché non le elimini, anche dopo un ricaricamento. Scarica o salva quelle che ti servono.",
+    "recovered": ", recuperata",
+    "lowSpace": "Poco spazio libero nel browser: una ripresa lunga potrebbe non entrare."
   }
 }

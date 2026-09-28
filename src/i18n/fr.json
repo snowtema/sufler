@@ -297,6 +297,12 @@
     "fpsUnsupported": "Votre caméra ne prend pas en charge cette fréquence d’images",
     "qualityUnsupported": "Votre caméra ne filme pas dans cette résolution",
     "statusStopTouch": "Arrêt. Touchez pour continuer",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "camFallback": "La caméra ou le micro choisis ne sont pas disponibles : ceux par défaut sont utilisés.",
+    "camEnded": "La caméra s’est coupée : elle a été débranchée ou prise par une autre application. La prise est enregistrée jusqu’ici.",
+    "camMuted": "Le système a mis la caméra en pause. La vidéo peut se figer jusqu’à son retour.",
+    "takesLeadPersist": "Les prises restent dans ce navigateur sur votre appareil jusqu’à ce que vous les supprimiez, même après un rechargement. Téléchargez ou enregistrez celles dont vous avez besoin.",
+    "recovered": ", récupérée",
+    "lowSpace": "Peu d’espace libre dans le navigateur : une longue prise risque de ne pas tenir."
   }
 }

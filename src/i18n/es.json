@@ -297,6 +297,12 @@
     "fpsUnsupported": "Tu cámara no admite esta frecuencia de fotogramas",
     "qualityUnsupported": "Tu cámara no graba a esta resolución",
     "statusStopTouch": "Parada. Toca para seguir",
-    "save": "Guardar"
+    "save": "Guardar",
+    "camFallback": "La cámara o el micrófono elegidos no están disponibles; se usan los predeterminados.",
+    "camEnded": "La cámara se apagó: se desconectó o la tomó otra aplicación. La toma se guardó hasta este punto.",
+    "camMuted": "El sistema pausó la cámara. El vídeo puede congelarse hasta que vuelva.",
+    "takesLeadPersist": "Las tomas se guardan en este navegador de tu dispositivo hasta que las borres, incluso tras recargar. Descarga o guarda las que necesites.",
+    "recovered": ", recuperada",
+    "lowSpace": "Queda poco espacio en el navegador: puede que una toma larga no quepa."
   }
 }

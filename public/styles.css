@@ -493,6 +493,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px 
 /* ——— Запись видео ——— */
 .rec-body { display: flex; flex-direction: column; gap: 13px; }
 body:not([data-record="true"]) .rec-body { display: none; }
+/* Дубли с прошлого раза видны, даже если запись сейчас выключена */
+body:not([data-record="true"]) #takesOpen:disabled { display: none; }
 .cam-preview {
   position: relative;
   aspect-ratio: 16 / 9;

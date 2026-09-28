@@ -686,12 +686,12 @@
   }
 
   let toastTimer = 0;
-  function toast(msg) {
+  function toast(msg, ms = 1100) {
     const el = $('toast');
     el.textContent = msg;
     el.classList.add('on');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('on'), 1100);
+    toastTimer = setTimeout(() => el.classList.remove('on'), ms);
   }
 
   function stageSettingChanged(msg) {
@@ -712,7 +712,10 @@
     if (preview.frame) stopPreview();
     let recFailed = null;
     if (C.record && getParsed().wordCount) {
-      try { await getStream(); } catch (err) { recFailed = err; }
+      try {
+        await getStream();
+        if (MOBILE) await videoReady(comp.video, 2500);
+      } catch (err) { recFailed = err; }
     }
     rec.takesAtOpen = rec.takes.length;
     const p = getParsed();
@@ -740,7 +743,7 @@
     requestWakeLock();
     if (MOBILE) { history.pushState({ suflerStage: true }, ''); stageInHistory = true; }
     startPlayback(true);
-    if (recFailed) toast(tpl(T.camFailed, { msg: recErrorText(recFailed) }));
+    if (recFailed && recFailed.name !== 'AbortError') toast(tpl(T.camFailed, { msg: recErrorText(recFailed) }), 4000);
     lastNow = performance.now();
     stopLoop();
     const loop = (now) => { raf = requestAnimationFrame(loop); tick(now); };
@@ -890,7 +893,7 @@
 
   // ——— Запись видео: всё в браузере (getUserMedia + MediaRecorder), файлы скачиваются локально ———
   const QUALITY = { 720: [1280, 720, 5e6], 1080: [1920, 1080, 10e6], 2160: [3840, 2160, 30e6] };
-  const rec = { stream: null, current: null, takes: [], counter: 0, mime: null, previewWanted: false, takesAtOpen: 0, showOnFinalize: false, meter: null };
+  const rec = { stream: null, pending: null, gen: 0, fellBack: false, lastVideo: null, current: null, takes: [], counter: 0, mime: null, previewWanted: false, takesAtOpen: 0, showOnFinalize: false, meter: null };
   const canRecord = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
 
   function pickMime() {
@@ -902,14 +905,38 @@
     return (err && T.recErr[err.name]) || (err && err.message) || T.recErr.unknown;
   }
 
-  function showRecError(err) {
+  function showRecMessage(text) {
     const el = $('recError');
-    el.hidden = !err;
-    el.textContent = err ? tpl(T.camError, { msg: recErrorText(err) }) : '';
+    el.hidden = !text;
+    el.textContent = text || '';
   }
 
-  async function getStream() {
-    if (rec.stream) return rec.stream;
+  function showRecError(err) {
+    showRecMessage(err && err.name !== 'AbortError' ? tpl(T.camError, { msg: recErrorText(err) }) : '');
+  }
+
+  /**
+   * Камера и микрофон. Запрос всегда один: повторный вызов ждёт уже начатый. Если камеру выключили,
+   * пока браузер спрашивал разрешение, пришедший поток сразу останавливается — иначе огонёк камеры
+   * остался бы гореть, а поток потерялся.
+   */
+  function getStream() {
+    if (rec.stream) return Promise.resolve(rec.stream);
+    if (rec.pending) return rec.pending;
+    const gen = rec.gen;
+    rec.pending = acquireStream()
+      .then((stream) => {
+        if (gen !== rec.gen) {
+          stream.getTracks().forEach((t) => t.stop());
+          throw new DOMException('cancelled', 'AbortError');
+        }
+        return setupStream(stream);
+      })
+      .finally(() => { rec.pending = null; });
+    return rec.pending;
+  }
+
+  async function acquireStream() {
     const [w, h] = QUALITY[C.recQuality] || QUALITY[1080];
     // max у частоты кадров: так 24 fps получится и с 30-кадровой камеры (браузер проредит кадры)
     const video = { width: { ideal: w }, height: { ideal: h }, frameRate: { ideal: C.recFps, max: C.recFps } };
@@ -923,17 +950,37 @@
     if (MOBILE) video.facingMode = { ideal: C.facing };
     else if (C.camId) video.deviceId = { exact: C.camId };
     if (C.micId) audio.deviceId = { exact: C.micId };
-    try {
-      rec.stream = await navigator.mediaDevices.getUserMedia({ video, audio: C.micId ? audio : true });
-    } catch (err) {
-      if (err.name !== 'OverconstrainedError' && err.name !== 'NotFoundError') { showRecError(err); throw err; }
-      // Выбранное устройство отключили или браузер не умеет ограничивать частоту — пробуем мягче
-      delete video.deviceId;
-      video.frameRate = { ideal: C.recFps };
-      try { rec.stream = await navigator.mediaDevices.getUserMedia({ video, audio: true }); } catch (err2) { showRecError(err2); throw err2; }
+    // Три попытки, от строгой к мягкой: 1) как просили; 2) без потолка частоты кадров (его не понимает,
+    // например, Safari) — выбранные камера и микрофон остаются; 3) выбранных устройств нет — берём
+    // встроенные и честно об этом говорим
+    let fellBack = false;
+    const attempts = [
+      () => {},
+      () => { video.frameRate = { ideal: C.recFps }; },
+      () => { fellBack = !!(video.deviceId || audio.deviceId); delete video.deviceId; delete audio.deviceId; },
+    ];
+    let lastErr = null;
+    for (const relax of attempts) {
+      relax();
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video, audio: audio.deviceId ? audio : true });
+        rec.fellBack = fellBack;
+        rec.lastVideo = video;
+        return stream;
+      } catch (err) {
+        lastErr = err;
+        if (err.name !== 'OverconstrainedError' && err.name !== 'NotFoundError') break;
+      }
     }
-    showRecError(null);
-    if (!MOBILE) await keepLandscape(video);
+    showRecError(lastErr);
+    throw lastErr;
+  }
+
+  async function setupStream(stream) {
+    rec.stream = stream;
+    showRecMessage(rec.fellBack ? T.camFallback : '');
+    watchTracks(stream);
+    if (!MOBILE) await keepLandscape(rec.lastVideo);
     attachRecVideo();
     const vtrack = rec.stream.getVideoTracks()[0];
     rec.facing = MOBILE ? ((vtrack && vtrack.getSettings().facingMode) || C.facing) : 'user';
@@ -949,6 +996,7 @@
   }
 
   function releaseStream() {
+    rec.gen++; // запрос камеры, который ещё в пути, будет отменён
     if (comp.video) comp.video.srcObject = null;
     stopMeter();
     stopFpsMeter();
@@ -970,6 +1018,39 @@
     };
     fill($('camSelect'), 'videoinput', 'video', C.camId, T.camera);
     fill($('micSelect'), 'audioinput', 'audio', C.micId, T.microphone);
+  }
+
+  /**
+   * Камеру отсоединили, её забрало другое приложение или отозвали доступ: трек заканчивается сам
+   * (наш track.stop() событие ended не вызывает). Сохраняем записанное, ставим чтение на паузу, сообщаем.
+   */
+  function watchTracks(stream) {
+    for (const track of stream.getTracks()) {
+      track.addEventListener('ended', () => { if (rec.stream === stream) onCameraLost(); });
+      if (track.kind === 'video') {
+        // iOS временно отбирает камеру (звонок, другое приложение) — кадр замирает
+        track.addEventListener('mute', () => { if (rec.stream === stream && rec.current) toast(T.camMuted, 3500); });
+      }
+    }
+  }
+
+  function onCameraLost() {
+    if (rec.current && (state === 'playing' || state === 'countdown')) pause();
+    stopTake();
+    rec.previewWanted = false;
+    releaseStream();
+    showRecMessage(T.camEnded);
+    if (!stage.hidden) toast(T.camEnded, 5000);
+  }
+
+  /** Ждём первый кадр видео-элемента (не дольше ms). */
+  function videoReady(v, ms) {
+    return new Promise((resolve) => {
+      if (!v || v.videoWidth) { resolve(); return; }
+      const done = () => { v.removeEventListener('loadedmetadata', done); clearTimeout(timer); resolve(); };
+      const timer = setTimeout(done, ms);
+      v.addEventListener('loadedmetadata', done);
+    });
   }
 
   /** Компьютер: если камера всё же отдала вертикальный кадр, просим у неё горизонтальный режим. */
@@ -1116,6 +1197,131 @@
     $('micLevel').style.transform = 'scaleX(0)';
   }
 
+  // ——— Дубли на диске (OPFS): пишем по ходу записи сегментами ———
+  // У OPFS запись через createWritable() попадает в файл только при close(), поэтому дубль пишется
+  // сегментами по ~5 секунд, каждый — отдельный закрытый файл. Дубли не копятся в памяти вкладки,
+  // переживают перезагрузку, а при падении вкладки теряются максимум последние секунды.
+  // Готовый дубль — Blob из файлов-сегментов, без копирования. Нет OPFS — всё в памяти, как раньше.
+  const disk = { dir: null, meta: [], chain: Promise.resolve(), persistAsked: false };
+  const TAKES_META = 'takes.json';
+  const SEGMENT_MS = 5000; // сегмент закрывается раз в 5 секунд — столько максимум теряется при падении
+
+  async function initTakeStore() {
+    try {
+      if (!navigator.storage || !navigator.storage.getDirectory) return;
+      const root = await navigator.storage.getDirectory();
+      const dir = await root.getDirectoryHandle('takes', { create: true });
+      const probe = await dir.getFileHandle('.probe', { create: true });
+      if (typeof probe.createWritable !== 'function') return; // старый Safari: только в воркере
+      const w = await probe.createWritable();
+      await w.write('ok');
+      await w.close();
+      await dir.removeEntry('.probe');
+      disk.dir = dir;
+      $('takesDialog').querySelector('.dialog-lead').textContent = T.takesLeadPersist;
+      await restoreTakes();
+    } catch (_) { disk.dir = null; }
+  }
+
+  function writeMeta() {
+    if (!disk.dir) return disk.chain;
+    const data = JSON.stringify(disk.meta);
+    disk.chain = disk.chain.then(async () => {
+      const w = await (await disk.dir.getFileHandle(TAKES_META, { create: true })).createWritable();
+      await w.write(data);
+      await w.close();
+    }).catch(() => {});
+    return disk.chain;
+  }
+
+  function metaSet(base, patch) {
+    const m = disk.meta.find((x) => x.base === base);
+    if (m) Object.assign(m, patch); else disk.meta.push({ base, ...patch });
+    writeMeta();
+  }
+
+  async function segmentFiles(base) {
+    const names = [];
+    for await (const name of disk.dir.keys()) if (name.startsWith(base + '-') && name.endsWith('.part')) names.push(name);
+    names.sort();
+    return Promise.all(names.map(async (n) => (await disk.dir.getFileHandle(n)).getFile()));
+  }
+
+  async function removeSegments(base) {
+    if (!disk.dir) return;
+    const names = [];
+    for await (const name of disk.dir.keys()) if (name.startsWith(base + '-')) names.push(name);
+    await Promise.all(names.map((n) => disk.dir.removeEntry(n).catch(() => {})));
+  }
+
+  async function restoreTakes() {
+    let meta = [];
+    try { meta = JSON.parse(await (await (await disk.dir.getFileHandle(TAKES_META)).getFile()).text()) || []; } catch (_) { meta = []; }
+    const keep = [];
+    for (const m of meta) {
+      try {
+        const files = await segmentFiles(m.base);
+        const type = m.ext === 'mp4' ? 'video/mp4' : 'video/webm';
+        const blob = new Blob(files, { type });
+        if (!blob.size) { await removeSegments(m.base); continue; }
+        const recovered = m.status === 'recording' || !!m.recovered; // вкладка закрылась посреди дубля
+        rec.takes.push({
+          n: m.n, blob, base: m.base, url: URL.createObjectURL(blob), size: blob.size,
+          duration: m.status === 'recording' ? null : m.duration, dims: m.dims, ext: m.ext, name: m.name,
+          saved: !!m.saved, recovered,
+        });
+        keep.push({ ...m, status: 'done', recovered });
+        rec.counter = Math.max(rec.counter, m.n || 0);
+      } catch (_) { /* сегментов нет — запись в списке больше не нужна */ }
+    }
+    rec.takes.sort((a, b) => a.n - b.n);
+    disk.meta = keep;
+    writeMeta();
+    renderTakes();
+    // Сегменты без записи в списке остаются, если вкладку закрыли посреди удаления.
+    // Свежие не трогаем: их может прямо сейчас писать другая вкладка
+    const prefixes = keep.map((m) => m.base + '-');
+    const orphans = [];
+    for await (const [name, h] of disk.dir.entries()) {
+      if (name.endsWith('.part') && !prefixes.some((p) => name.startsWith(p))) orphans.push([name, h]);
+    }
+    for (const [name, h] of orphans) {
+      try { if (Date.now() - (await h.getFile()).lastModified > 60000) await disk.dir.removeEntry(name); } catch (_) {}
+    }
+  }
+
+  function flushSegment(take) {
+    take.lastFlush = performance.now();
+    if (!take.buffer.length) return;
+    const chunks = take.buffer.splice(0);
+    const part = { chunks, file: null };
+    take.parts.push(part);
+    if (!take.base) return; // диска нет — куски остаются в памяти
+    const name = `${take.base}-${String(take.parts.length).padStart(5, '0')}.part`;
+    take.chain = take.chain.then(async () => {
+      try {
+        const handle = await disk.dir.getFileHandle(name, { create: true });
+        const w = await handle.createWritable();
+        await w.write(new Blob(chunks));
+        await w.close();
+        part.file = handle;
+        part.chunks = null; // на диске — из памяти убираем
+      } catch (_) {
+        take.diskFailed = true; // например, кончилось место: этот сегмент остаётся в памяти
+      }
+    });
+  }
+
+  function checkSpace() {
+    if (!navigator.storage) return;
+    if (!disk.persistAsked && navigator.storage.persist) { disk.persistAsked = true; navigator.storage.persist().catch(() => {}); }
+    if (navigator.storage.estimate) {
+      navigator.storage.estimate().then(({ quota, usage }) => {
+        if (quota && quota - (usage || 0) < 300 * 1048576) toast(T.lowSpace, 4000);
+      }).catch(() => {});
+    }
+  }
+
   function startTake() {
     if (!rec.stream) return;
     if (rec.mime === null) rec.mime = pickMime();
@@ -1136,15 +1342,32 @@
       recorder = create(rec.stream);
     }
     const st = rec.stream.getVideoTracks()[0] ? rec.stream.getVideoTracks()[0].getSettings() : {};
+    const type = recorder.mimeType || rec.mime || 'video/webm';
+    const ext = type.includes('mp4') ? 'mp4' : 'webm';
+    const n = ++rec.counter;
+    const date = new Date();
+    const two = (x) => String(x).padStart(2, '0');
+    const stamp = `${date.getFullYear()}-${two(date.getMonth() + 1)}-${two(date.getDate())}_${two(date.getHours())}-${two(date.getMinutes())}`;
     const take = {
-      recorder, chunks: [], n: ++rec.counter, date: new Date(), elapsed: 0, since: performance.now(),
+      recorder, n, date, type, ext, name: `sufler-take-${n}_${stamp}.${ext}`, elapsed: 0, since: performance.now(),
       composite, dims: composite ? composite.dims : [st.width, st.height],
+      buffer: [], parts: [], chain: Promise.resolve(), diskFailed: false, lastFlush: performance.now(),
+      base: disk.dir ? `take-${date.getTime()}-${n}` : null,
     };
-    recorder.ondataavailable = (e) => { if (e.data && e.data.size) take.chunks.push(e.data); };
+    if (take.base) {
+      metaSet(take.base, { n, name: take.name, ext, dims: take.dims, status: 'recording', date: date.toISOString() });
+      checkSpace();
+    }
+    recorder.ondataavailable = (e) => {
+      if (!e.data || !e.data.size) return;
+      take.buffer.push(e.data);
+      // По времени, а не по числу кусков: браузер может отдавать куски реже, чем раз в секунду
+      if (performance.now() - take.lastFlush >= SEGMENT_MS) flushSegment(take);
+    };
     take.done = new Promise((resolve) => {
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         if (take.composite) take.composite.stop();
-        finalizeTake(take);
+        await finalizeTake(take);
         resolve();
       };
     });
@@ -1186,16 +1409,23 @@
     return t.elapsed + (t.recorder.state === 'recording' ? performance.now() - t.since : 0);
   }
 
-  function finalizeTake(take) {
-    const type = take.recorder.mimeType || rec.mime || 'video/webm';
-    const blob = new Blob(take.chunks, { type });
+  async function finalizeTake(take) {
+    flushSegment(take);
+    await take.chain; // все сегменты дописаны
+    const pieces = await Promise.all(take.parts.map(async (p) => (p.file ? p.file.getFile() : new Blob(p.chunks))));
+    const blob = new Blob(pieces, { type: take.type });
     if (blob.size) {
-      const ext = type.includes('mp4') ? 'mp4' : 'webm';
-      const d = take.date;
-      const two = (x) => String(x).padStart(2, '0');
-      const stamp = `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}_${two(d.getHours())}-${two(d.getMinutes())}`;
-      rec.takes.push({ n: take.n, blob, dims: take.dims, url: URL.createObjectURL(blob), size: blob.size, duration: take.elapsed, ext, name: `sufler-take-${take.n}_${stamp}.${ext}`, saved: false });
+      rec.takes.push({
+        n: take.n, blob, base: take.base, dims: take.dims, url: URL.createObjectURL(blob), size: blob.size,
+        duration: take.elapsed, ext: take.ext, name: take.name, saved: false, recovered: false,
+      });
+      // Если часть сегментов не легла на диск, после перезагрузки дубль будет неполным — помечаем
+      if (take.base) metaSet(take.base, { status: 'done', duration: take.elapsed, recovered: take.diskFailed });
       renderTakes();
+    } else if (take.base) {
+      disk.meta = disk.meta.filter((x) => x.base !== take.base);
+      writeMeta();
+      removeSegments(take.base);
     }
     if (rec.showOnFinalize) { rec.showOnFinalize = false; if (rec.takes.length > rec.takesAtOpen) openTakes(); }
   }
@@ -1233,8 +1463,11 @@
   };
 
   function takeMeta(t) {
-    const dims = t.dims && t.dims[0] && t.dims[1] ? `${t.dims[0]}×${t.dims[1]}, ` : '';
-    return `${fmtClock(t.duration)}, ${dims}${fmtSize(t.size)}, ${t.ext.toUpperCase()}${t.saved ? T.downloaded : ''}`;
+    const parts = [];
+    if (t.duration != null) parts.push(fmtClock(t.duration));
+    if (t.dims && t.dims[0] && t.dims[1]) parts.push(`${t.dims[0]}×${t.dims[1]}`);
+    parts.push(fmtSize(t.size), t.ext.toUpperCase());
+    return parts.join(', ') + (t.recovered ? T.recovered : '') + (t.saved ? T.downloaded : '');
   }
 
   function renderTakes() {
@@ -1293,9 +1526,13 @@
     if (!t) return;
     if (e.target.closest('[data-save]')) {
       t.saved = true;
+      if (t.base) metaSet(t.base, { saved: true });
       li.querySelector('.take-meta').textContent = takeMeta(t);
     } else if (e.target.closest('[data-share]')) {
-      saveTake(t).then(() => { li.querySelector('.take-meta').textContent = takeMeta(t); });
+      saveTake(t).then(() => {
+        if (t.saved && t.base) metaSet(t.base, { saved: true });
+        li.querySelector('.take-meta').textContent = takeMeta(t);
+      });
     } else if (e.target.closest('[data-delete]')) {
       const b = e.target.closest('[data-delete]');
       // Удаление без возврата: подтверждаем вторым нажатием
@@ -1307,6 +1544,11 @@
       }
       URL.revokeObjectURL(t.url);
       rec.takes = rec.takes.filter((x) => x !== t);
+      if (t.base) {
+        disk.meta = disk.meta.filter((x) => x.base !== t.base);
+        writeMeta();
+        removeSegments(t.base);
+      }
       renderTakes();
     }
   }
@@ -1339,9 +1581,10 @@
     $('takesList').addEventListener('click', onTakesClick);
     // Нескачанные дубли пропадут вместе со вкладкой — предупреждаем
     window.addEventListener('beforeunload', (e) => {
-      if (rec.current || rec.takes.some((t) => !t.saved)) { e.preventDefault(); e.returnValue = ''; }
+      if (rec.current || (!disk.dir && rec.takes.some((t) => !t.saved))) { e.preventDefault(); e.returnValue = ''; }
     });
     renderTakes();
+    initTakeStore();
   }
 
   // ——— Промпт для любой нейросети ———

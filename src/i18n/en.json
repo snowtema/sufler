@@ -133,6 +133,12 @@
     "fpsUnsupported": "Your camera can’t do this frame rate",
     "qualityUnsupported": "Your camera doesn’t record at this resolution",
     "statusStopTouch": "Stop. Tap to continue",
-    "save": "Save"
+    "save": "Save",
+    "camFallback": "The selected camera or microphone isn’t available, so the default one is used.",
+    "camEnded": "The camera turned off: it was disconnected or another app took it. The take is saved up to this point.",
+    "camMuted": "The system paused the camera. The video may freeze until it’s back.",
+    "takesLeadPersist": "Takes are stored in this browser on your device until you delete them, even after a reload. Download or save the ones you need.",
+    "recovered": ", recovered",
+    "lowSpace": "Little free space left in the browser: a long take may not fit."
   }
 }
