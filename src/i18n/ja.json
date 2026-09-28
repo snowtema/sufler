@@ -223,7 +223,17 @@
     "Frame rate": "フレームレート",
     "Video frame rate": "動画のフレームレート",
     "More ways to start": "その他の開始方法",
-    "From section": "セクションから"
+    "From section": "セクションから",
+    "Paste": "貼り付け",
+    "Done": "完了",
+    "Stops until you tap the screen. Handy for switching slides or taking a breath": "画面をタップするまで止まります。スライドの切り替えや息継ぎに便利です",
+    "While paused, drag the block with your finger to move it.": "一時停止中は、指でブロックを動かせます。",
+    "Front": "前面",
+    "Back": "背面",
+    "Video is recorded right in your browser and never leaves your phone. Recording runs from the countdown until you close the reading screen; “From the top” starts a new take.": "動画はブラウザ内で録画され、スマホの外には出ません。録画はカウントダウンから読み上げ画面を閉じるまで続き、「最初から」で新しいテイクを始められます。",
+    "Takes are kept only in this tab. Save the ones you need before closing the page.": "テイクはこのタブの中にだけ保存されます。ページを閉じる前に必要なものを保存してください。",
+    "Smaller text": "文字を小さく",
+    "Larger text": "文字を大きく"
   },
   "js": {
     "words": {
@@ -283,6 +293,8 @@
     "copied": "コピーしました",
     "copyFailed": "コピーできませんでした",
     "fpsUnsupported": "カメラがこのフレームレートに対応していません",
-    "qualityUnsupported": "カメラがこの解像度に対応していません"
+    "qualityUnsupported": "カメラがこの解像度に対応していません",
+    "statusStopTouch": "ストップ。タップで続きへ",
+    "save": "保存"
   }
 }

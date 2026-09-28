@@ -223,7 +223,17 @@
     "Frame rate": "Частота кадров",
     "Video frame rate": "Частота кадров видео",
     "More ways to start": "Другие способы начать",
-    "From section": "С раздела"
+    "From section": "С раздела",
+    "Paste": "Вставить",
+    "Done": "Готово",
+    "Stops until you tap the screen. Handy for switching slides or taking a breath": "Остановка до касания экрана. Удобно, чтобы переключить слайд или перевести дыхание",
+    "While paused, drag the block with your finger to move it.": "На паузе блок можно передвинуть пальцем.",
+    "Front": "Фронтальная",
+    "Back": "Основная",
+    "Video is recorded right in your browser and never leaves your phone. Recording runs from the countdown until you close the reading screen; “From the top” starts a new take.": "Видео пишется прямо в браузере и не покидает телефон. Запись идёт от обратного отсчёта до закрытия экрана чтения, «С начала» начинает новый дубль.",
+    "Takes are kept only in this tab. Save the ones you need before closing the page.": "Дубли хранятся только в этой вкладке. Сохраните нужные, пока не закрыли страницу.",
+    "Smaller text": "Шрифт меньше",
+    "Larger text": "Шрифт больше"
   },
   "js": {
     "words": {
@@ -289,6 +299,8 @@
     "copied": "Скопировано",
     "copyFailed": "Не удалось скопировать",
     "fpsUnsupported": "Камера не поддерживает такую частоту кадров",
-    "qualityUnsupported": "Камера не снимает в таком разрешении"
+    "qualityUnsupported": "Камера не снимает в таком разрешении",
+    "statusStopTouch": "Стоп. Коснитесь, чтобы продолжить",
+    "save": "Сохранить"
   }
 }

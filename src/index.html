@@ -7,7 +7,8 @@
 <html lang="{{@lang}}">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script>(function(){var q=location.search.match(/[?&]device=(mobile|desktop)/),m=q?q[1]==='mobile':matchMedia('(hover: none) and (pointer: coarse)').matches;document.documentElement.dataset.device=m?'mobile':'desktop'})()</script>
 {{@redirect}}
 {{@head}}
   <meta name="author" content="Artem Slizhik">
@@ -29,8 +30,10 @@
         <button type="button" data-v="simple" title="{{Fewer settings}}">{{Simple}}</button><button type="button" data-v="pro" title="{{All settings}}">{{Pro}}</button>
       </div>
       <div class="stats" id="stats" aria-live="polite"></div>
-      <div class="actions">
 {{@langmenu}}
+      <button type="button" class="icon-btn" id="settingsOpen" data-mobile aria-label="{{Settings}}" aria-controls="settingsCol" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg></button>
+      <div class="actions">
+        <button type="button" class="rec-quick" id="recQuick" data-mobile aria-pressed="false" aria-label="{{Record video from camera}}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6.5" width="13" height="11" rx="2.5"/><path d="M16 10.5l5-3v9l-5-3z"/></svg></button>
         <div class="split" id="startSplit">
           <button class="btn btn-rec split-main" id="start" type="button"><span class="rec-dot" aria-hidden="true"></span>{{Start reading}}</button>
           <button class="btn btn-rec split-toggle" id="startMore" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="startMenu" aria-label="{{More ways to start}}" title="{{More ways to start}}"><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
@@ -63,6 +66,8 @@
             <button type="button" class="chip" data-pro data-insert="{{[look at the camera]}}" title="{{Stage direction: shown above the word, not read aloud}}"><span class="glyph glyph-cue">[ ]</span>{{cue}}</button>
             <button type="button" class="chip" data-pro data-line="# " title="{{Section: hidden on screen, lets you jump between takes}}"><span class="glyph glyph-sec">#</span>{{section}}</button>
             <button type="button" class="auto-link" data-skill-open>{{Mark up automatically}}</button>
+            <button type="button" class="chip chip-paste" id="pasteText" data-mobile>{{Paste}}</button>
+            <button type="button" class="chip chip-done" id="doneTyping" data-mobile>{{Done}}</button>
           </div>
 
           <div class="editor" id="editorWrap">
@@ -76,7 +81,7 @@
           <dl>
             <dt><code>/</code> <code>//</code> <code>///</code></dt><dd>{{Short, normal and long pause. Same in words:}} <code>[PAUSE-SHORT]</code> <code>[PAUSE]</code> <code>[PAUSE-LONG]</code></dd>
             <dt data-pro><code>[PAUSE 2.5]</code></dt><dd data-pro>{{Pause of exact length in seconds}}</dd>
-            <dt><code>[STOP]</code></dt><dd>{{Stops until you press Space. Handy for switching slides or taking a breath}}</dd>
+            <dt><code>[STOP]</code></dt><dd><span data-desktop>{{Stops until you press Space. Handy for switching slides or taking a breath}}</span><span data-mobile>{{Stops until you tap the screen. Handy for switching slides or taking a breath}}</span></dd>
             <dt><code>{{*word*}}</code></dt><dd>{{Emphasis: the word is highlighted and shown a little longer. Works for several words too}}</dd>
             <dt data-pro><code>[SLOW]…[/SLOW]</code></dt><dd data-pro>{{Slower passage (×0.75).}} <code>[FAST]…[/FAST]</code> {{faster (×1.3),}} <code>[SPEED 0.8]…[/SPEED]</code> {{sets your own multiplier}}</dd>
             <dt data-pro><code>{{[any text]}}</code></dt><dd data-pro>{{Stage direction: shown small above the word, not read aloud. For example}} <code>{{[smile]}}</code></dd>
@@ -91,7 +96,13 @@
         </details>
       </section>
 
-      <aside class="settings-col" aria-label="{{Settings}}">
+      <div class="sheet-backdrop" id="sheetBackdrop" data-mobile></div>
+      <aside class="settings-col" id="settingsCol" aria-label="{{Settings}}">
+        <div class="sheet-head" id="sheetHead" data-mobile>
+          <span class="sheet-grab" aria-hidden="true"></span>
+          <h2>{{Settings}}</h2>
+          <button type="button" class="sheet-done" id="settingsDone">{{Done}}</button>
+        </div>
         <figure class="monitor" id="monitor" aria-label="{{Where the block will be on your screen}}">
           <div class="monitor-body" id="monitorBody">
             <span class="cam" aria-hidden="true"></span>
@@ -143,7 +154,7 @@
             <input type="range" id="posX" min="0" max="100" step="1"></label>
           <label class="row" data-pro><span>{{Vertical}}</span><output id="posYOut"></output>
             <input type="range" id="posY" min="0" max="100" step="1"></label>
-          <p class="hint">{{While paused, drag the block with the mouse and resize it by its edges.}}</p>
+          <p class="hint"><span data-desktop>{{While paused, drag the block with the mouse and resize it by its edges.}}</span><span data-mobile>{{While paused, drag the block with your finger to move it.}}</span></p>
         </fieldset>
 
         <fieldset class="group">
@@ -159,8 +170,12 @@
             <p class="rec-error" id="recError" hidden></p>
             <label class="switch"><span>{{See yourself behind the text}}</span><input type="checkbox" id="selfView"></label>
             <label class="switch"><span>{{Pause recording when reading pauses}}</span><input type="checkbox" id="recPause"></label>
-            <label class="row"><span>{{Camera}}</span><select id="camSelect"><option value="">{{Default}}</option></select></label>
-            <label class="row"><span>{{Microphone}}</span><select id="micSelect"><option value="">{{Default}}</option></select></label>
+            <div class="row" data-mobile><span>{{Camera}}</span>
+              <div class="seg" id="facing" role="radiogroup" aria-label="{{Camera}}">
+                <button type="button" data-v="user">{{Front}}</button><button type="button" data-v="environment">{{Back}}</button>
+              </div></div>
+            <label class="row" data-desktop><span>{{Camera}}</span><select id="camSelect"><option value="">{{Default}}</option></select></label>
+            <label class="row" data-desktop><span>{{Microphone}}</span><select id="micSelect"><option value="">{{Default}}</option></select></label>
             <div class="row" data-pro><span>{{Quality}}</span>
               <div class="seg" id="recQuality" role="radiogroup" aria-label="{{Video quality}}">
                 <button type="button" data-v="720">720p</button><button type="button" data-v="1080">1080p</button><button type="button" data-v="2160">4K</button>
@@ -169,7 +184,7 @@
               <div class="seg" id="recFps" role="radiogroup" aria-label="{{Video frame rate}}">
                 <button type="button" data-v="24">24</button><button type="button" data-v="30">30</button><button type="button" data-v="60">60</button>
               </div></div>
-            <p class="hint">{{Video is recorded right in your browser and never leaves your computer. Recording runs from the countdown until you leave the stage; R starts a new take.}}</p>
+            <p class="hint"><span data-desktop>{{Video is recorded right in your browser and never leaves your computer. Recording runs from the countdown until you leave the stage; R starts a new take.}}</span><span data-mobile>{{Video is recorded right in your browser and never leaves your phone. Recording runs from the countdown until you close the reading screen; “From the top” starts a new take.}}</span></p>
             <button type="button" class="btn btn-small" id="takesOpen" disabled>{{No takes yet}}</button>
           </div>
         </fieldset>
@@ -262,7 +277,7 @@
     <div class="dialog-body">
       <button type="button" class="dialog-close" data-dialog-close aria-label="{{Close}}"></button>
       <h2 id="takesTitle">{{Takes}}</h2>
-      <p class="dialog-lead">{{Takes are kept only in this tab. Download the ones you need before closing the page: files go to your Downloads folder.}}</p>
+      <p class="dialog-lead"><span data-desktop>{{Takes are kept only in this tab. Download the ones you need before closing the page: files go to your Downloads folder.}}</span><span data-mobile>{{Takes are kept only in this tab. Save the ones you need before closing the page.}}</span></p>
       <ol class="takes" id="takesList"></ol>
     </div>
   </dialog>
@@ -291,15 +306,19 @@
     <div class="hud" id="hud">
       <div class="hud-top">
         <div class="hud-where" id="hudWhere"></div>
-        <button type="button" class="hud-btn" id="exitStage">{{Exit}} <kbd>Esc</kbd></button>
+        <button type="button" class="hud-btn hud-exit" id="exitStage" aria-label="{{Exit}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="lbl">{{Exit}}</span> <kbd>Esc</kbd></button>
       </div>
       <div class="hud-panel">
         <div class="hud-sections" id="hudSections"></div>
         <p class="hud-context" id="hudContext"></p>
         <div class="hud-controls">
           <button type="button" class="hud-btn hud-play" id="hudPlay">{{Continue}} <kbd>{{Space}}</kbd></button>
-          <button type="button" class="hud-btn" id="hudBackSentence">{{Back to sentence start}} <kbd>⇧←</kbd></button>
-          <button type="button" class="hud-btn" id="hudRestart">{{From the top}} <kbd>R</kbd></button>
+          <button type="button" class="hud-btn hud-icon" id="hudBackSentence" aria-label="{{Back to sentence start}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 7L6 12l5 5M18 7l-5 5 5 5"/></svg><span class="lbl">{{Back to sentence start}}</span> <kbd>⇧←</kbd></button>
+          <button type="button" class="hud-btn hud-icon" id="hudRestart" aria-label="{{From the top}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><span class="lbl">{{From the top}}</span> <kbd>R</kbd></button>
+        </div>
+        <div class="hud-steppers">
+          <div class="stepper"><button type="button" id="hudSlower" aria-label="{{slower}}">−</button><span id="hudWpm"></span><button type="button" id="hudFaster" aria-label="{{faster}}">+</button></div>
+          <div class="stepper"><button type="button" id="hudSmaller" aria-label="{{Smaller text}}">A−</button><span id="hudFont"></span><button type="button" id="hudLarger" aria-label="{{Larger text}}">A+</button></div>
         </div>
         <p class="hud-keys"><kbd>←</kbd><kbd>→</kbd> {{word}} · <kbd>↑</kbd><kbd>↓</kbd> {{speed}} · <kbd>+</kbd><kbd>−</kbd> {{font}} · <kbd>[</kbd><kbd>]</kbd> {{width}} · <kbd>F</kbd> {{fullscreen}}<span data-pro> · <kbd>M</kbd> {{mirror}}</span></p>
       </div>

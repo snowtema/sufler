@@ -131,6 +131,8 @@
     "copied": "Copied",
     "copyFailed": "Couldn’t copy",
     "fpsUnsupported": "Your camera can’t do this frame rate",
-    "qualityUnsupported": "Your camera doesn’t record at this resolution"
+    "qualityUnsupported": "Your camera doesn’t record at this resolution",
+    "statusStopTouch": "Stop. Tap to continue",
+    "save": "Save"
   }
 }

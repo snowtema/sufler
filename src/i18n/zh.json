@@ -223,7 +223,17 @@
     "Frame rate": "帧率",
     "Video frame rate": "视频帧率",
     "More ways to start": "更多开始方式",
-    "From section": "从分段开始"
+    "From section": "从分段开始",
+    "Paste": "粘贴",
+    "Done": "完成",
+    "Stops until you tap the screen. Handy for switching slides or taking a breath": "停下来，直到你点击屏幕。方便切换幻灯片或换口气",
+    "While paused, drag the block with your finger to move it.": "暂停时可以用手指拖动文字块。",
+    "Front": "前置",
+    "Back": "后置",
+    "Video is recorded right in your browser and never leaves your phone. Recording runs from the countdown until you close the reading screen; “From the top” starts a new take.": "视频直接在浏览器中录制，不会离开你的手机。录制从倒计时开始，直到你关闭阅读画面；点“从头开始”会开始新的一次录制。",
+    "Takes are kept only in this tab. Save the ones you need before closing the page.": "录制内容只保存在这个标签页里。关闭页面前请保存需要的视频。",
+    "Smaller text": "缩小文字",
+    "Larger text": "放大文字"
   },
   "js": {
     "words": {
@@ -283,6 +293,8 @@
     "copied": "已复制",
     "copyFailed": "复制失败",
     "fpsUnsupported": "摄像头不支持此帧率",
-    "qualityUnsupported": "摄像头不支持此分辨率"
+    "qualityUnsupported": "摄像头不支持此分辨率",
+    "statusStopTouch": "暂停。点击继续",
+    "save": "保存"
   }
 }

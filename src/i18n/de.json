@@ -223,7 +223,17 @@
     "Frame rate": "Bildrate",
     "Video frame rate": "Bildrate des Videos",
     "More ways to start": "Weitere Startoptionen",
-    "From section": "Ab Abschnitt"
+    "From section": "Ab Abschnitt",
+    "Paste": "Einfügen",
+    "Done": "Fertig",
+    "Stops until you tap the screen. Handy for switching slides or taking a breath": "Hält an, bis du auf den Bildschirm tippst. Praktisch, um die Folie zu wechseln oder Luft zu holen",
+    "While paused, drag the block with your finger to move it.": "In der Pause kannst du den Block mit dem Finger verschieben.",
+    "Front": "Vorne",
+    "Back": "Hinten",
+    "Video is recorded right in your browser and never leaves your phone. Recording runs from the countdown until you close the reading screen; “From the top” starts a new take.": "Das Video wird direkt im Browser aufgenommen und verlässt dein Handy nie. Die Aufnahme läuft vom Countdown, bis du den Lesebildschirm schließt; „Von vorn“ startet einen neuen Take.",
+    "Takes are kept only in this tab. Save the ones you need before closing the page.": "Takes bleiben nur in diesem Tab. Sichere die benötigten, bevor du die Seite schließt.",
+    "Smaller text": "Schrift kleiner",
+    "Larger text": "Schrift größer"
   },
   "js": {
     "words": {
@@ -285,6 +295,8 @@
     "copied": "Kopiert",
     "copyFailed": "Kopieren fehlgeschlagen",
     "fpsUnsupported": "Deine Kamera schafft diese Bildrate nicht",
-    "qualityUnsupported": "Deine Kamera nimmt nicht in dieser Auflösung auf"
+    "qualityUnsupported": "Deine Kamera nimmt nicht in dieser Auflösung auf",
+    "statusStopTouch": "Stopp. Tippen zum Weiterlesen",
+    "save": "Sichern"
   }
 }

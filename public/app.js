@@ -20,6 +20,9 @@
     return h;
   };
 
+  // Телефон или планшет: определяется в <head> до отрисовки (?device=mobile|desktop — принудительно)
+  const MOBILE = document.documentElement.dataset.device === 'mobile';
+
   const DEFAULTS = {
     wpm: 140, chunk: 1, punctFactor: 1, lengthAware: true,
     pauses: { short: 0.5, medium: 1, long: 2 },
@@ -29,10 +32,13 @@
     countdown: 3, fullscreen: true, progress: false,
     beep: true, mode: 'simple',
     record: false, camId: '', micId: '', recQuality: '1080', recFps: 30, selfView: false, recPause: false,
+    facing: 'user',
   };
+  // На телефоне фронтальная камера сверху: блок ближе к верху, шрифт под узкий экран, себя видно за текстом
+  if (MOBILE) Object.assign(DEFAULTS, { fontSize: 56, width: 360, posY: 12, selfView: true });
   // Что настраивается в простом режиме; остальное там берётся из DEFAULTS
-  const SIMPLE_KEYS = ['mode', 'wpm', 'fontSize', 'width', 'posX', 'posY', 'beep', 'record', 'camId', 'micId', 'selfView', 'recPause'];
-  const POS_PRESETS = { camera: [50, 16], center: [50, 50] };
+  const SIMPLE_KEYS = ['mode', 'wpm', 'fontSize', 'width', 'posX', 'posY', 'beep', 'record', 'camId', 'micId', 'selfView', 'recPause', 'facing'];
+  const POS_PRESETS = { camera: [50, MOBILE ? 12 : 16], center: [50, 50] };
 
   const DEMO = T.demo || '';
 
@@ -189,7 +195,7 @@
     posY: (v) => `${v} %`,
   };
   const CHECKS = ['lengthAware', 'guides', 'frame', 'flip', 'fullscreen', 'progress', 'beep', 'record', 'selfView', 'recPause'];
-  const SEGS = { mode: String, chunk: Number, weight: Number, theme: String, align: String, countdown: Number, recQuality: String, recFps: Number };
+  const SEGS = { mode: String, chunk: Number, weight: Number, theme: String, align: String, countdown: Number, recQuality: String, recFps: Number, facing: String };
   const PAUSE_INPUTS = { pShort: 'short', pMedium: 'medium', pLong: 'long' };
 
   function setFill(input) {
@@ -219,6 +225,7 @@
     }
     document.body.dataset.mode = S.mode;
     document.body.dataset.record = S.record;
+    $('recQuick').setAttribute('aria-pressed', String(!!S.record));
   }
 
   function onSettingsChange() {
@@ -356,19 +363,19 @@
     const b = $('monitorBlock');
     b.style.left = C.posX + '%';
     b.style.top = C.posY + '%';
-    b.style.width = C.width * k + 'px';
+    b.style.width = Math.min(C.width, sw - 24) * k + 'px';
     b.style.padding = `0 ${16 * k}px`;
     b.style.fontFamily = `"${C.font}", system-ui, sans-serif`;
     b.style.fontWeight = C.weight;
     b.style.transform = `translate(-50%, -50%)${C.flip ? ' scaleX(-1)' : ''}`;
     const el = $('monitorWord');
     if (preview.frame) {
-      if (preview.frame.type === 'words') drawWords(el, preview.frame.words, C.fontSize * k, (C.width - 32) * k);
+      if (preview.frame.type === 'words') drawWords(el, preview.frame.words, C.fontSize * k, (Math.min(C.width, sw - 24) - 32) * k);
       else { el.className = 'word'; el.textContent = ''; }
       return;
     }
     const first = getParsed().tokens.find((t) => t.type === 'word') || { text: T.sampleWord, emph: false };
-    drawWords(el, [first], C.fontSize * k, (C.width - 32) * k);
+    drawWords(el, [first], C.fontSize * k, (Math.min(C.width, sw - 24) - 32) * k);
   }
 
   // Проигрывает начало текста прямо в мини-мониторе, чтобы проверить темп без полноэкранного режима
@@ -454,6 +461,11 @@
     if (s === 'paused' || s === 'ended') renderHud();
   }
 
+  /** Ширина блока со словами: не шире экрана (на телефоне 640 px не влезут). */
+  function blockWidth() {
+    return Math.min(C.width, Math.max(160, (stage.clientWidth || window.innerWidth) - 24));
+  }
+
   function applyStage() {
     stage.dataset.theme = C.theme;
     stage.dataset.flip = C.flip;
@@ -464,7 +476,7 @@
     attachCam($('stageCam'), stage);
     block.style.left = C.posX + '%';
     block.style.top = C.posY + '%';
-    block.style.width = C.width + 'px';
+    block.style.width = blockWidth() + 'px';
     block.style.fontSize = C.fontSize + 'px';
     block.style.fontFamily = `"${C.font}", system-ui, sans-serif`;
     block.style.fontWeight = C.weight;
@@ -483,9 +495,9 @@
     } else if (!f) {
       drawStatus(wordEl, '', 'status');
     } else if (f.type === 'words') {
-      drawWords(wordEl, f.words, C.fontSize, C.width - 32);
+      drawWords(wordEl, f.words, C.fontSize, blockWidth() - 32);
     } else if (f.type === 'stop') {
-      drawStatus(wordEl, T.statusStop, 'status');
+      drawStatus(wordEl, MOBILE ? T.statusStopTouch : T.statusStop, 'status');
     } else {
       drawStatus(wordEl, '', 'status');
       pausebarFill.style.transform = `scaleX(${1 - frameElapsed / Math.max(1, P.frameMs(f, C))})`;
@@ -651,6 +663,8 @@
   }
 
   function renderHud() {
+    $('hudWpm').textContent = tpl(T.wpm, { v: C.wpm });
+    $('hudFont').textContent = `${C.fontSize} px`;
     const f = frames[idx];
     const passed = cum[idx] + frameElapsed;
     const left = (cum[frames.length] || 0) - passed;
@@ -724,6 +738,7 @@
     applyStage();
     if (C.fullscreen && !document.fullscreenElement && stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
     requestWakeLock();
+    if (MOBILE) { history.pushState({ suflerStage: true }, ''); stageInHistory = true; }
     startPlayback(true);
     if (recFailed) toast(tpl(T.camFailed, { msg: recErrorText(recFailed) }));
     lastNow = performance.now();
@@ -739,7 +754,12 @@
     clearInterval(watchdog);
   }
 
+  let stageInHistory = false;
+  window.addEventListener('popstate', () => { if (!stage.hidden) { stageInHistory = false; closeStage(); } });
+
   function closeStage() {
+    if (stage.hidden) return;
+    if (stageInHistory) { stageInHistory = false; history.back(); }
     stopLoop();
     if (rec.current) {
       // Дубль дописывается асинхронно — окно с ним откроется, когда файл будет готов
@@ -760,7 +780,7 @@
     // Курсор в редакторе — на слове, где остановились: «С курсора» продолжит отсюда
     const i = findWords(Math.min(idx, frames.length - 1), -1);
     if (i >= 0) {
-      ta.focus();
+      if (!MOBILE) ta.focus(); // на телефоне фокус открыл бы клавиатуру
       ta.setSelectionRange(frames[i].src, frames[i].src);
     }
   }
@@ -768,6 +788,16 @@
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     else if (stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
+  }
+
+  function changeWpm(d) {
+    S.wpm = clamp(C.wpm + d, 60, 360);
+    stageSettingChanged(tpl(T.toastSpeed, { v: S.wpm }));
+  }
+
+  function changeFont(d) {
+    S.fontSize = clamp(C.fontSize + d, 24, 220);
+    stageSettingChanged(tpl(T.toastFont, { v: S.fontSize }));
   }
 
   function onStageKey(e) {
@@ -781,13 +811,9 @@
     else if (k === 'ArrowLeft') e.shiftKey ? jumpSentence(-1) : step(-1);
     else if (k === 'PageUp') jumpSentence(-1);
     else if (k === 'Home') goTo(findWords(0, 1));
-    else if (k === 'ArrowUp' || k === 'ArrowDown') {
-      S.wpm = clamp(C.wpm + (k === 'ArrowUp' ? 10 : -10), 60, 360);
-      stageSettingChanged(tpl(T.toastSpeed, { v: C.wpm }));
-    } else if (c === 'Equal' || c === 'Minus' || c === 'NumpadAdd' || c === 'NumpadSubtract') {
-      S.fontSize = clamp(C.fontSize + (c === 'Equal' || c === 'NumpadAdd' ? 4 : -4), 24, 220);
-      stageSettingChanged(tpl(T.toastFont, { v: C.fontSize }));
-    } else if (c === 'BracketRight' || c === 'BracketLeft') {
+    else if (k === 'ArrowUp' || k === 'ArrowDown') changeWpm(k === 'ArrowUp' ? 10 : -10);
+    else if (c === 'Equal' || c === 'Minus' || c === 'NumpadAdd' || c === 'NumpadSubtract') changeFont(c === 'Equal' || c === 'NumpadAdd' ? 4 : -4);
+    else if (c === 'BracketRight' || c === 'BracketLeft') {
       S.width = clamp(C.width + (c === 'BracketRight' ? 20 : -20), 160, 2400);
       stageSettingChanged(tpl(T.toastWidth, { v: C.width }));
     } else if (c === 'KeyR') restart();
@@ -843,6 +869,10 @@
     hudClick('hudPlay', togglePlay);
     hudClick('hudBackSentence', () => jumpSentence(-1));
     hudClick('hudRestart', restart);
+    $('hudSlower').addEventListener('click', () => changeWpm(-10));
+    $('hudFaster').addEventListener('click', () => changeWpm(10));
+    $('hudSmaller').addEventListener('click', () => changeFont(-4));
+    $('hudLarger').addEventListener('click', () => changeFont(4));
     hudClick('exitStage', closeStage);
     $('hudSections').addEventListener('click', (e) => {
       const b = e.target.closest('[data-section]');
@@ -880,13 +910,16 @@
 
   async function getStream() {
     if (rec.stream) return rec.stream;
-    const [w, h] = QUALITY[C.recQuality] || QUALITY[1080];
+    const [qw, qh] = QUALITY[C.recQuality] || QUALITY[1080];
+    const portrait = MOBILE && window.innerHeight > window.innerWidth; // телефон вертикально — видео 9:16
+    const [w, h] = portrait ? [qh, qw] : [qw, qh];
     // max у частоты кадров: так 24 fps получится и с 30-кадровой камеры (браузер проредит кадры)
     // aspectRatio 16:9: без него камера с вертикальными режимами (iPhone через Continuity Camera)
     // на запрос 4K может отдать вертикальный 2160×3840 — формально он «ближе» к запросу, чем 1080p
-    const video = { width: { ideal: w }, height: { ideal: h }, aspectRatio: { ideal: 16 / 9 }, frameRate: { ideal: C.recFps, max: C.recFps } };
+    const video = { width: { ideal: w }, height: { ideal: h }, aspectRatio: { ideal: portrait ? 9 / 16 : 16 / 9 }, frameRate: { ideal: C.recFps, max: C.recFps } };
     const audio = {};
-    if (C.camId) video.deviceId = { exact: C.camId };
+    if (MOBILE) video.facingMode = { ideal: C.facing };
+    else if (C.camId) video.deviceId = { exact: C.camId };
     if (C.micId) audio.deviceId = { exact: C.micId };
     try {
       rec.stream = await navigator.mediaDevices.getUserMedia({ video, audio: C.micId ? audio : true });
@@ -898,7 +931,9 @@
       try { rec.stream = await navigator.mediaDevices.getUserMedia({ video, audio: true }); } catch (err2) { showRecError(err2); throw err2; }
     }
     showRecError(null);
-    await keepLandscape(video);
+    await keepOrientation(video, portrait);
+    const vtrack = rec.stream.getVideoTracks()[0];
+    rec.facing = MOBILE ? ((vtrack && vtrack.getSettings().facingMode) || C.facing) : 'user';
     const v = $('camVideo');
     v.srcObject = rec.stream;
     v.play().catch(() => {});
@@ -933,13 +968,13 @@
     fill($('micSelect'), 'audioinput', 'audio', C.micId, T.microphone);
   }
 
-  /** Если камера всё же отдала вертикальный кадр, просим у неё горизонтальный режим. */
-  async function keepLandscape(video) {
+  /** Если камера отдала кадр не той ориентации, просим нужную: на компьютере горизонтальную, на телефоне — как держат телефон. */
+  async function keepOrientation(video, portrait) {
     const track = rec.stream.getVideoTracks()[0];
     const st = track ? track.getSettings() : {};
-    if (!st.width || !st.height || st.height <= st.width) return;
-    const { deviceId, ...rest } = video;
-    try { await track.applyConstraints({ ...rest, aspectRatio: { min: 1.2 } }); } catch (_) { /* камера умеет только вертикально — оставляем как есть */ }
+    if (!st.width || !st.height || (st.height > st.width) === portrait) return;
+    const { deviceId, facingMode, ...rest } = video;
+    try { await track.applyConstraints({ ...rest, aspectRatio: portrait ? { max: 0.8 } : { min: 1.2 } }); } catch (_) { /* камера так не умеет — оставляем как есть */ }
   }
 
   /** Разрешение и частота на превью. FPS считаем по реально пришедшим кадрам, а не по паспорту камеры. */
@@ -1079,7 +1114,7 @@
       const d = take.date;
       const two = (x) => String(x).padStart(2, '0');
       const stamp = `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}_${two(d.getHours())}-${two(d.getMinutes())}`;
-      rec.takes.push({ n: take.n, url: URL.createObjectURL(blob), size: blob.size, duration: take.elapsed, ext, name: `sufler-take-${take.n}_${stamp}.${ext}`, saved: false });
+      rec.takes.push({ n: take.n, blob, url: URL.createObjectURL(blob), size: blob.size, duration: take.elapsed, ext, name: `sufler-take-${take.n}_${stamp}.${ext}`, saved: false });
       renderTakes();
     }
     if (rec.showOnFinalize) { rec.showOnFinalize = false; if (rec.takes.length > rec.takesAtOpen) openTakes(); }
@@ -1095,6 +1130,7 @@
   function attachCam(video, host) {
     const want = C.record && C.selfView && rec.stream ? rec.stream : null;
     host.dataset.selfview = String(!!want);
+    host.dataset.facing = rec.facing || 'user';
     if (video.srcObject !== want) {
       video.srcObject = want;
       if (want) video.play().catch(() => {});
@@ -1106,6 +1142,7 @@
     if (!stage.hidden) attachCam($('stageCam'), stage);
     const on = !!rec.stream;
     $('camPreview').classList.toggle('on', on);
+    $('camPreview').dataset.facing = rec.facing || 'user';
     $('camToggle').textContent = on ? T.camOn : T.camOff;
   }
 
@@ -1132,7 +1169,9 @@
           <b>${tpl(T.take, { n: t.n })}</b>
           <span class="take-meta">${takeMeta(t)}</span>
           <div class="take-actions">
-            <a class="btn btn-dark btn-small" href="${t.url}" download="${esc(t.name)}" data-save>${T.download}</a>
+            ${MOBILE
+              ? `<button type="button" class="btn btn-dark btn-small" data-share>${T.save}</button>`
+              : `<a class="btn btn-dark btn-small" href="${t.url}" download="${esc(t.name)}" data-save>${T.download}</a>`}
             <button type="button" class="btn btn-small" data-delete>${T.del}</button>
           </div>
         </div>
@@ -1145,6 +1184,27 @@
     if (!d.open) d.showModal();
   }
 
+  /** Сохранить дубль на телефоне: системное меню «Поделиться» (на iPhone оттуда «Сохранить видео»), иначе скачать. */
+  async function saveTake(t) {
+    const file = new File([t.blob], t.name, { type: t.blob.type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+        t.saved = true;
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return; // закрыли меню — ничего не делаем
+      }
+    }
+    const a = document.createElement('a');
+    a.href = t.url;
+    a.download = t.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    t.saved = true;
+  }
+
   function onTakesClick(e) {
     const li = e.target.closest('.take');
     if (!li) return;
@@ -1153,6 +1213,8 @@
     if (e.target.closest('[data-save]')) {
       t.saved = true;
       li.querySelector('.take-meta').textContent = takeMeta(t);
+    } else if (e.target.closest('[data-share]')) {
+      saveTake(t).then(() => { li.querySelector('.take-meta').textContent = takeMeta(t); });
     } else if (e.target.closest('[data-delete]')) {
       const b = e.target.closest('[data-delete]');
       // Удаление без возврата: подтверждаем вторым нажатием
@@ -1174,8 +1236,14 @@
       $('record').closest('.switch').title = T.noRecorder;
     }
     $('record').addEventListener('change', () => {
-      if (S.record) { rec.previewWanted = true; getStream().catch(() => {}); } else { rec.previewWanted = false; releaseStream(); showRecError(null); }
+      $('recQuick').setAttribute('aria-pressed', String(!!S.record));
+      if (S.record) {
+        // На телефоне камера нужна только в настройках и при чтении: спрашиваем доступ и выключаем
+        rec.previewWanted = !MOBILE || $('settingsCol').classList.contains('open');
+        getStream().then(() => { if (!rec.previewWanted && !rec.current) releaseStream(); }).catch(() => {});
+      } else { rec.previewWanted = false; releaseStream(); showRecError(null); }
     });
+    $('recQuick').addEventListener('click', () => $('record').click());
     $('camToggle').addEventListener('click', () => {
       if (rec.stream) { rec.previewWanted = false; releaseStream(); } else { rec.previewWanted = true; getStream().catch(() => {}); }
     });
@@ -1184,6 +1252,7 @@
     $('micSelect').addEventListener('change', () => { S.micId = $('micSelect').value; onSettingsChange(); restartStream(); });
     $('recQuality').addEventListener('click', (e) => { if (e.target.closest('button')) restartStream(); });
     $('recFps').addEventListener('click', (e) => { if (e.target.closest('button')) restartStream(); });
+    $('facing').addEventListener('click', (e) => { if (e.target.closest('button')) restartStream(); });
     if (navigator.mediaDevices) navigator.mediaDevices.addEventListener('devicechange', () => { if (rec.stream) fillDevices(); });
     $('takesOpen').addEventListener('click', openTakes);
     $('takesList').addEventListener('click', onTakesClick);
@@ -1282,6 +1351,87 @@
     document.addEventListener('click', (e) => { if (!menu.hidden && !e.target.closest('#startSplit')) close(false); });
   }
 
+  // ——— Телефон: настройки в нижней шторке ———
+  function bindSheet() {
+    if (!MOBILE) return;
+    const sheet = $('settingsCol');
+    const backdrop = $('sheetBackdrop');
+    const head = $('sheetHead');
+    const openBtn = $('settingsOpen');
+    head.insertBefore($('mode'), head.querySelector('h2')); // «Простой / Про» — в шапке шторки
+    const open = () => {
+      sheet.classList.add('open');
+      backdrop.classList.add('open');
+      openBtn.setAttribute('aria-expanded', 'true');
+      renderMonitor();
+      if (S.record && !rec.stream) { rec.previewWanted = true; getStream().catch(() => {}); }
+    };
+    const close = () => {
+      sheet.classList.remove('open');
+      backdrop.classList.remove('open');
+      openBtn.setAttribute('aria-expanded', 'false');
+      if (preview.frame) stopPreview();
+      if (rec.stream && !rec.current) { rec.previewWanted = false; releaseStream(); }
+    };
+    openBtn.addEventListener('click', open);
+    backdrop.addEventListener('click', close);
+    $('settingsDone').addEventListener('click', close);
+    // Свайп вниз за шапку закрывает шторку
+    let drag = null;
+    head.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button')) return;
+      drag = { y: e.clientY, dy: 0 };
+      head.setPointerCapture(e.pointerId);
+      sheet.classList.add('dragging');
+    });
+    head.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      drag.dy = Math.max(0, e.clientY - drag.y);
+      sheet.style.transform = `translateY(${drag.dy}px)`;
+    });
+    const end = () => {
+      if (!drag) return;
+      const far = drag.dy > 90;
+      drag = null;
+      sheet.classList.remove('dragging');
+      sheet.style.transform = '';
+      if (far) close();
+    };
+    head.addEventListener('pointerup', end);
+    head.addEventListener('pointercancel', end);
+  }
+
+  // ——— Телефон: панель разметки прилипает к клавиатуре, «Вставить» и «Готово» ———
+  function bindTyping() {
+    if (!MOBILE) return;
+    const bar = $('toolbar');
+    const typing = () => document.body.classList.contains('typing');
+    const place = () => {
+      const vv = window.visualViewport;
+      const lift = typing() && vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+      bar.style.transform = lift ? `translateY(${-lift}px)` : '';
+    };
+    ta.addEventListener('focus', () => { document.body.classList.add('typing'); place(); });
+    ta.addEventListener('blur', () => {
+      setTimeout(() => { if (document.activeElement !== ta) { document.body.classList.remove('typing'); place(); } }, 150);
+    });
+    // Нажатие на чип не должно забирать фокус у текста — иначе клавиатура прыгает
+    const keepFocus = (e) => { if (typing() && e.target.closest('button')) e.preventDefault(); };
+    bar.addEventListener('pointerdown', keepFocus);
+    bar.addEventListener('mousedown', keepFocus);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', place);
+      window.visualViewport.addEventListener('scroll', place);
+    }
+    $('doneTyping').addEventListener('click', () => ta.blur());
+    $('pasteText').addEventListener('click', async () => {
+      try {
+        const clip = await navigator.clipboard.readText();
+        if (clip) insertText(clip);
+      } catch (_) { ta.focus(); } // нет доступа к буферу — хотя бы откроем клавиатуру
+    });
+  }
+
   // ——— Переключатель языка ———
   function bindLangMenu() {
     const trigger = $('langTrigger');
@@ -1340,6 +1490,8 @@
     bindLangMenu();
     $('start').addEventListener('click', () => openStage(false));
     bindStartMenu();
+    bindSheet();
+    bindTyping();
     $('monitorPlay').addEventListener('click', () => (preview.frame ? stopPreview() : startPreview()));
 
     const skillDialog = $('skillDialog');
