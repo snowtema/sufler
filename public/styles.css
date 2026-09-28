@@ -966,6 +966,10 @@ html[data-device="mobile"] .dialog-body { padding: 24px 18px calc(24px + env(saf
 html[data-device="mobile"] .dialog-close { width: 36px; height: 36px; }
 html[data-device="mobile"] .dialog-tabs button { height: 38px; font-size: 15px; }
 html[data-device="mobile"] .dialog-actions .btn { flex: 1 1 100%; justify-content: center; height: 48px; font-size: 15.5px; }
+/* Превью камеры на телефоне — кадр целиком, без обрезки: что видно, то и пишется */
+html[data-device="mobile"] .cam-layer { object-fit: contain; background: #000; }
+html[data-device="mobile"] .cam-preview { aspect-ratio: auto; height: 44dvh; }
+html[data-device="mobile"] .cam-preview video { object-fit: contain; }
 html[data-device="mobile"] .take { grid-template-columns: 1fr; }
 html[data-device="mobile"] .take video { aspect-ratio: auto; max-height: 52dvh; object-fit: contain; }
 html[data-device="mobile"] .take-actions .btn { flex: 1; justify-content: center; height: 44px; }

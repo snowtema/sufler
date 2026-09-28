@@ -910,13 +910,15 @@
 
   async function getStream() {
     if (rec.stream) return rec.stream;
-    const [qw, qh] = QUALITY[C.recQuality] || QUALITY[1080];
-    const portrait = MOBILE && window.innerHeight > window.innerWidth; // телефон вертикально — видео 9:16
-    const [w, h] = portrait ? [qh, qw] : [qw, qh];
+    const [w, h] = QUALITY[C.recQuality] || QUALITY[1080];
     // max у частоты кадров: так 24 fps получится и с 30-кадровой камеры (браузер проредит кадры)
-    // aspectRatio 16:9: без него камера с вертикальными режимами (iPhone через Continuity Camera)
-    // на запрос 4K может отдать вертикальный 2160×3840 — формально он «ближе» к запросу, чем 1080p
-    const video = { width: { ideal: w }, height: { ideal: h }, aspectRatio: { ideal: portrait ? 9 / 16 : 16 / 9 }, frameRate: { ideal: C.recFps, max: C.recFps } };
+    const video = { width: { ideal: w }, height: { ideal: h }, frameRate: { ideal: C.recFps, max: C.recFps } };
+    // На компьютере просим 16:9: без этого камера с вертикальными режимами (iPhone через Continuity Camera)
+    // на запрос 4K может отдать вертикальный 2160×3840 — формально он «ближе» к запросу, чем 1080p.
+    // На телефоне — наоборот, никаких пропорций и «вертикальных» размеров: камера телефона физически
+    // горизонтальная, и браузер, подгоняя кадр под 9:16, обрезает его. Просим родное разрешение,
+    // а повернуть кадр по положению телефона браузер умеет сам.
+    if (!MOBILE) video.aspectRatio = { ideal: 16 / 9 };
     const audio = {};
     if (MOBILE) video.facingMode = { ideal: C.facing };
     else if (C.camId) video.deviceId = { exact: C.camId };
@@ -931,7 +933,8 @@
       try { rec.stream = await navigator.mediaDevices.getUserMedia({ video, audio: true }); } catch (err2) { showRecError(err2); throw err2; }
     }
     showRecError(null);
-    await keepOrientation(video, portrait);
+    if (!MOBILE) await keepLandscape(video);
+    attachRecVideo();
     const vtrack = rec.stream.getVideoTracks()[0];
     rec.facing = MOBILE ? ((vtrack && vtrack.getSettings().facingMode) || C.facing) : 'user';
     const v = $('camVideo');
@@ -946,6 +949,7 @@
   }
 
   function releaseStream() {
+    if (comp.video) comp.video.srcObject = null;
     stopMeter();
     stopFpsMeter();
     if (rec.stream) rec.stream.getTracks().forEach((t) => t.stop());
@@ -968,13 +972,67 @@
     fill($('micSelect'), 'audioinput', 'audio', C.micId, T.microphone);
   }
 
-  /** Если камера отдала кадр не той ориентации, просим нужную: на компьютере горизонтальную, на телефоне — как держат телефон. */
-  async function keepOrientation(video, portrait) {
+  /** Компьютер: если камера всё же отдала вертикальный кадр, просим у неё горизонтальный режим. */
+  async function keepLandscape(video) {
     const track = rec.stream.getVideoTracks()[0];
     const st = track ? track.getSettings() : {};
-    if (!st.width || !st.height || (st.height > st.width) === portrait) return;
-    const { deviceId, facingMode, ...rest } = video;
-    try { await track.applyConstraints({ ...rest, aspectRatio: portrait ? { max: 0.8 } : { min: 1.2 } }); } catch (_) { /* камера так не умеет — оставляем как есть */ }
+    if (!st.width || !st.height || st.height <= st.width) return;
+    const { deviceId, ...rest } = video;
+    try { await track.applyConstraints({ ...rest, aspectRatio: { min: 1.2 } }); } catch (_) { /* камера умеет только вертикально — оставляем как есть */ }
+  }
+
+  // ——— Телефон: запись через canvas ———
+  // Мобильные браузеры по-разному пишут повёрнутую камеру: бывает, что файл выходит горизонтальным
+  // или с поворотом только в метаданных. Поэтому рисуем каждый кадр в canvas ровно таким, каким его
+  // показывает <video> (уже повёрнутым по положению телефона), и записываем canvas.
+  const comp = { video: null };
+
+  function attachRecVideo() {
+    if (!MOBILE) return;
+    if (!comp.video) {
+      const v = document.createElement('video');
+      v.muted = true;
+      v.playsInline = true;
+      v.setAttribute('playsinline', '');
+      // В документе и не display:none — иначе iOS не декодирует кадры
+      v.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none;z-index:-1';
+      document.body.appendChild(v);
+      comp.video = v;
+    }
+    if (comp.video.srcObject !== rec.stream) {
+      comp.video.srcObject = rec.stream;
+      comp.video.play().catch(() => {});
+    }
+  }
+
+  function startCompositor() {
+    const v = comp.video;
+    if (!v || !v.videoWidth || !v.videoHeight || !HTMLCanvasElement.prototype.captureStream) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = v.videoWidth; // размер кадра — как его показывает телефон, без обрезки
+    canvas.height = v.videoHeight;
+    const ctx = canvas.getContext('2d');
+    const draw = () => {
+      const vw = v.videoWidth, vh = v.videoHeight;
+      if (!vw || !vh) return;
+      // Если телефон повернули посреди дубля, вписываем кадр без искажений
+      const k = Math.min(canvas.width / vw, canvas.height / vh);
+      const dw = vw * k, dh = vh * k;
+      if (dw < canvas.width - 1 || dh < canvas.height - 1) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+      ctx.drawImage(v, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+    };
+    draw();
+    const timer = setInterval(draw, 1000 / C.recFps);
+    const out = canvas.captureStream(C.recFps);
+    rec.stream.getAudioTracks().forEach((t) => out.addTrack(t));
+    return {
+      stream: out,
+      dims: [canvas.width, canvas.height],
+      stop() {
+        clearInterval(timer);
+        out.getVideoTracks().forEach((t) => t.stop()); // микрофон не трогаем: он общий с камерой
+      },
+    };
   }
 
   /** Разрешение и частота на превью. FPS считаем по реально пришедшим кадрам, а не по паспорту камеры. */
@@ -986,7 +1044,8 @@
       const st = track ? track.getSettings() : {};
       // Разрешение по короткой стороне: 1920×1080 и 1080×1920 — это 1080p
       const short = Math.min(st.width || v.videoWidth || 0, st.height || v.videoHeight || 0);
-      const res = short >= 2000 ? '4K' : short ? `${short}p` : '';
+      const w = v.videoWidth || st.width, h = v.videoHeight || st.height; // как кадр реально показывается
+      const res = w && h ? `${w}×${h}` : short ? `${short}p` : '';
       $('camInfo').textContent = [res, fps ? `${fps} fps` : ''].filter(Boolean).join(' · ');
     };
     label(track && Math.round(track.getSettings().frameRate || 0));
@@ -1061,13 +1120,34 @@
     if (!rec.stream) return;
     if (rec.mime === null) rec.mime = pickMime();
     const bps = (QUALITY[C.recQuality] || QUALITY[1080])[2] * Math.max(1, C.recFps / 30);
+    const opts = rec.mime ? { mimeType: rec.mime, videoBitsPerSecond: bps } : { videoBitsPerSecond: bps };
+    const create = (stream) => {
+      let r;
+      try { r = new MediaRecorder(stream, opts); } catch (_) { r = new MediaRecorder(stream); }
+      r.start(1000); // куски по секунде: при сбое вкладки не теряется всё
+      return r;
+    };
+    let composite = MOBILE ? startCompositor() : null;
     let recorder;
-    try { recorder = new MediaRecorder(rec.stream, rec.mime ? { mimeType: rec.mime, videoBitsPerSecond: bps } : { videoBitsPerSecond: bps }); }
-    catch (_) { recorder = new MediaRecorder(rec.stream); }
-    const take = { recorder, chunks: [], n: ++rec.counter, date: new Date(), elapsed: 0, since: performance.now() };
+    try {
+      recorder = create(composite ? composite.stream : rec.stream);
+    } catch (_) {
+      if (composite) { composite.stop(); composite = null; }
+      recorder = create(rec.stream);
+    }
+    const st = rec.stream.getVideoTracks()[0] ? rec.stream.getVideoTracks()[0].getSettings() : {};
+    const take = {
+      recorder, chunks: [], n: ++rec.counter, date: new Date(), elapsed: 0, since: performance.now(),
+      composite, dims: composite ? composite.dims : [st.width, st.height],
+    };
     recorder.ondataavailable = (e) => { if (e.data && e.data.size) take.chunks.push(e.data); };
-    take.done = new Promise((resolve) => { recorder.onstop = () => { finalizeTake(take); resolve(); }; });
-    recorder.start(1000); // куски по секунде: при сбое вкладки не теряется всё
+    take.done = new Promise((resolve) => {
+      recorder.onstop = () => {
+        if (take.composite) take.composite.stop();
+        finalizeTake(take);
+        resolve();
+      };
+    });
     rec.current = take;
     renderRecBadge();
   }
@@ -1114,7 +1194,7 @@
       const d = take.date;
       const two = (x) => String(x).padStart(2, '0');
       const stamp = `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}_${two(d.getHours())}-${two(d.getMinutes())}`;
-      rec.takes.push({ n: take.n, blob, url: URL.createObjectURL(blob), size: blob.size, duration: take.elapsed, ext, name: `sufler-take-${take.n}_${stamp}.${ext}`, saved: false });
+      rec.takes.push({ n: take.n, blob, dims: take.dims, url: URL.createObjectURL(blob), size: blob.size, duration: take.elapsed, ext, name: `sufler-take-${take.n}_${stamp}.${ext}`, saved: false });
       renderTakes();
     }
     if (rec.showOnFinalize) { rec.showOnFinalize = false; if (rec.takes.length > rec.takesAtOpen) openTakes(); }
@@ -1153,7 +1233,8 @@
   };
 
   function takeMeta(t) {
-    return `${fmtClock(t.duration)}, ${fmtSize(t.size)}, ${t.ext.toUpperCase()}${t.saved ? T.downloaded : ''}`;
+    const dims = t.dims && t.dims[0] && t.dims[1] ? `${t.dims[0]}×${t.dims[1]}, ` : '';
+    return `${fmtClock(t.duration)}, ${dims}${fmtSize(t.size)}, ${t.ext.toUpperCase()}${t.saved ? T.downloaded : ''}`;
   }
 
   function renderTakes() {
