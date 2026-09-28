@@ -712,10 +712,7 @@
     if (preview.frame) stopPreview();
     let recFailed = null;
     if (C.record && getParsed().wordCount) {
-      try {
-        await getStream();
-        if (MOBILE) await videoReady(comp.video, 2500);
-      } catch (err) { recFailed = err; }
+      try { await getStream(); } catch (err) { recFailed = err; }
     }
     rec.takesAtOpen = rec.takes.length;
     const p = getParsed();
@@ -981,7 +978,6 @@
     showRecMessage(rec.fellBack ? T.camFallback : '');
     watchTracks(stream);
     if (!MOBILE) await keepLandscape(rec.lastVideo);
-    attachRecVideo();
     const vtrack = rec.stream.getVideoTracks()[0];
     rec.facing = MOBILE ? ((vtrack && vtrack.getSettings().facingMode) || C.facing) : 'user';
     const v = $('camVideo');
@@ -997,7 +993,6 @@
 
   function releaseStream() {
     rec.gen++; // запрос камеры, который ещё в пути, будет отменён
-    if (comp.video) comp.video.srcObject = null;
     stopMeter();
     stopFpsMeter();
     if (rec.stream) rec.stream.getTracks().forEach((t) => t.stop());
@@ -1043,15 +1038,6 @@
     if (!stage.hidden) toast(T.camEnded, 5000);
   }
 
-  /** Ждём первый кадр видео-элемента (не дольше ms). */
-  function videoReady(v, ms) {
-    return new Promise((resolve) => {
-      if (!v || v.videoWidth) { resolve(); return; }
-      const done = () => { v.removeEventListener('loadedmetadata', done); clearTimeout(timer); resolve(); };
-      const timer = setTimeout(done, ms);
-      v.addEventListener('loadedmetadata', done);
-    });
-  }
 
   /** Компьютер: если камера всё же отдала вертикальный кадр, просим у неё горизонтальный режим. */
   async function keepLandscape(video) {
@@ -1060,60 +1046,6 @@
     if (!st.width || !st.height || st.height <= st.width) return;
     const { deviceId, ...rest } = video;
     try { await track.applyConstraints({ ...rest, aspectRatio: { min: 1.2 } }); } catch (_) { /* камера умеет только вертикально — оставляем как есть */ }
-  }
-
-  // ——— Телефон: запись через canvas ———
-  // Мобильные браузеры по-разному пишут повёрнутую камеру: бывает, что файл выходит горизонтальным
-  // или с поворотом только в метаданных. Поэтому рисуем каждый кадр в canvas ровно таким, каким его
-  // показывает <video> (уже повёрнутым по положению телефона), и записываем canvas.
-  const comp = { video: null };
-
-  function attachRecVideo() {
-    if (!MOBILE) return;
-    if (!comp.video) {
-      const v = document.createElement('video');
-      v.muted = true;
-      v.playsInline = true;
-      v.setAttribute('playsinline', '');
-      // В документе и не display:none — иначе iOS не декодирует кадры
-      v.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none;z-index:-1';
-      document.body.appendChild(v);
-      comp.video = v;
-    }
-    if (comp.video.srcObject !== rec.stream) {
-      comp.video.srcObject = rec.stream;
-      comp.video.play().catch(() => {});
-    }
-  }
-
-  function startCompositor() {
-    const v = comp.video;
-    if (!v || !v.videoWidth || !v.videoHeight || !HTMLCanvasElement.prototype.captureStream) return null;
-    const canvas = document.createElement('canvas');
-    canvas.width = v.videoWidth; // размер кадра — как его показывает телефон, без обрезки
-    canvas.height = v.videoHeight;
-    const ctx = canvas.getContext('2d');
-    const draw = () => {
-      const vw = v.videoWidth, vh = v.videoHeight;
-      if (!vw || !vh) return;
-      // Если телефон повернули посреди дубля, вписываем кадр без искажений
-      const k = Math.min(canvas.width / vw, canvas.height / vh);
-      const dw = vw * k, dh = vh * k;
-      if (dw < canvas.width - 1 || dh < canvas.height - 1) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
-      ctx.drawImage(v, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
-    };
-    draw();
-    const timer = setInterval(draw, 1000 / C.recFps);
-    const out = canvas.captureStream(C.recFps);
-    rec.stream.getAudioTracks().forEach((t) => out.addTrack(t));
-    return {
-      stream: out,
-      dims: [canvas.width, canvas.height],
-      stop() {
-        clearInterval(timer);
-        out.getVideoTracks().forEach((t) => t.stop()); // микрофон не трогаем: он общий с камерой
-      },
-    };
   }
 
   /** Разрешение и частота на превью. FPS считаем по реально пришедшим кадрам, а не по паспорту камеры. */
@@ -1327,21 +1259,12 @@
     if (rec.mime === null) rec.mime = pickMime();
     const bps = (QUALITY[C.recQuality] || QUALITY[1080])[2] * Math.max(1, C.recFps / 30);
     const opts = rec.mime ? { mimeType: rec.mime, videoBitsPerSecond: bps } : { videoBitsPerSecond: bps };
-    const create = (stream) => {
-      let r;
-      try { r = new MediaRecorder(stream, opts); } catch (_) { r = new MediaRecorder(stream); }
-      r.start(1000); // куски по секунде: при сбое вкладки не теряется всё
-      return r;
-    };
-    let composite = MOBILE ? startCompositor() : null;
     let recorder;
-    try {
-      recorder = create(composite ? composite.stream : rec.stream);
-    } catch (_) {
-      if (composite) { composite.stop(); composite = null; }
-      recorder = create(rec.stream);
-    }
+    try { recorder = new MediaRecorder(rec.stream, opts); } catch (_) { recorder = new MediaRecorder(rec.stream); }
+    // Куски по секунде: при сбое вкладки не теряется всё, а iOS 26 без timeslice теряет кадры видео
+    recorder.start(1000);
     const st = rec.stream.getVideoTracks()[0] ? rec.stream.getVideoTracks()[0].getSettings() : {};
+    const cv = $('camVideo'); // размеры кадра как на экране: у повёрнутого телефона они уже переставлены
     const type = recorder.mimeType || rec.mime || 'video/webm';
     const ext = type.includes('mp4') ? 'mp4' : 'webm';
     const n = ++rec.counter;
@@ -1350,7 +1273,7 @@
     const stamp = `${date.getFullYear()}-${two(date.getMonth() + 1)}-${two(date.getDate())}_${two(date.getHours())}-${two(date.getMinutes())}`;
     const take = {
       recorder, n, date, type, ext, name: `sufler-take-${n}_${stamp}.${ext}`, elapsed: 0, since: performance.now(),
-      composite, dims: composite ? composite.dims : [st.width, st.height],
+      dims: cv.videoWidth ? [cv.videoWidth, cv.videoHeight] : [st.width, st.height],
       buffer: [], parts: [], chain: Promise.resolve(), diskFailed: false, lastFlush: performance.now(),
       base: disk.dir ? `take-${date.getTime()}-${n}` : null,
     };
@@ -1366,7 +1289,6 @@
     };
     take.done = new Promise((resolve) => {
       recorder.onstop = async () => {
-        if (take.composite) take.composite.stop();
         await finalizeTake(take);
         resolve();
       };
