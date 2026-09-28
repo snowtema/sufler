@@ -31,8 +31,18 @@
       <div class="stats" id="stats" aria-live="polite"></div>
       <div class="actions">
 {{@langmenu}}
-        <button class="btn" id="startCursor" type="button" title="{{Start from the word under the cursor (⌘/Ctrl + Enter)}}">{{From cursor}}</button>
-        <button class="btn btn-rec" id="start" type="button"><span class="rec-dot" aria-hidden="true"></span>{{Start reading}}</button>
+        <div class="split" id="startSplit">
+          <button class="btn btn-rec split-main" id="start" type="button"><span class="rec-dot" aria-hidden="true"></span>{{Start reading}}</button>
+          <button class="btn btn-rec split-toggle" id="startMore" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="startMenu" aria-label="{{More ways to start}}" title="{{More ways to start}}"><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
+          <div class="start-menu" id="startMenu" role="menu" aria-labelledby="startMore" hidden>
+            <button type="button" role="menuitem" data-start="top">{{From the top}}</button>
+            <button type="button" role="menuitem" data-start="cursor" title="{{Start from the word under the cursor (⌘/Ctrl + Enter)}}">{{From cursor}}<kbd id="cursorKey">⌘↵</kbd></button>
+            <div class="start-menu-sections" id="startSections" hidden>
+              <div class="start-menu-label">{{From section}}</div>
+              <div id="startSectionList"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -144,6 +154,7 @@
               <video id="camVideo" muted playsinline></video>
               <button type="button" class="cam-preview-btn" id="camToggle">{{Turn camera on}}</button>
               <div class="mic-meter" title="{{Microphone level}}"><i id="micLevel"></i></div>
+              <span class="cam-info" id="camInfo" aria-live="polite"></span>
             </div>
             <p class="rec-error" id="recError" hidden></p>
             <label class="switch"><span>{{See yourself behind the text}}</span><input type="checkbox" id="selfView"></label>
@@ -153,6 +164,10 @@
             <div class="row" data-pro><span>{{Quality}}</span>
               <div class="seg" id="recQuality" role="radiogroup" aria-label="{{Video quality}}">
                 <button type="button" data-v="720">720p</button><button type="button" data-v="1080">1080p</button><button type="button" data-v="2160">4K</button>
+              </div></div>
+            <div class="row" data-pro><span>{{Frame rate}}</span>
+              <div class="seg" id="recFps" role="radiogroup" aria-label="{{Video frame rate}}">
+                <button type="button" data-v="24">24</button><button type="button" data-v="30">30</button><button type="button" data-v="60">60</button>
               </div></div>
             <p class="hint">{{Video is recorded right in your browser and never leaves your computer. Recording runs from the countdown until you leave the stage; R starts a new take.}}</p>
             <button type="button" class="btn btn-small" id="takesOpen" disabled>{{No takes yet}}</button>

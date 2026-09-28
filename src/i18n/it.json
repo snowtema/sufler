@@ -219,7 +219,11 @@
     "stop": "stop",
     "width": "larghezza",
     "with the text.": "con il testo.",
-    "word": "parola"
+    "word": "parola",
+    "Frame rate": "Fotogrammi al secondo",
+    "Video frame rate": "Fotogrammi al secondo del video",
+    "More ways to start": "Altri modi per iniziare",
+    "From section": "Dalla sezione"
   },
   "js": {
     "words": {
@@ -279,6 +283,8 @@
     "confirmDel": "Eliminare davvero?",
     "noRecorder": "Questo browser non può registrare video",
     "copied": "Copiato",
-    "copyFailed": "Impossibile copiare"
+    "copyFailed": "Impossibile copiare",
+    "fpsUnsupported": "La fotocamera non supporta questa frequenza di fotogrammi",
+    "qualityUnsupported": "La fotocamera non registra a questa risoluzione"
   }
 }

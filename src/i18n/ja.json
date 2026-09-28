@@ -219,7 +219,11 @@
     "stop": "ストップ",
     "width": "幅",
     "with the text.": "をテキストと一緒に実行します。",
-    "word": "語"
+    "word": "語",
+    "Frame rate": "フレームレート",
+    "Video frame rate": "動画のフレームレート",
+    "More ways to start": "その他の開始方法",
+    "From section": "セクションから"
   },
   "js": {
     "words": {
@@ -277,6 +281,8 @@
     "confirmDel": "本当に削除しますか？",
     "noRecorder": "このブラウザでは録画できません",
     "copied": "コピーしました",
-    "copyFailed": "コピーできませんでした"
+    "copyFailed": "コピーできませんでした",
+    "fpsUnsupported": "カメラがこのフレームレートに対応していません",
+    "qualityUnsupported": "カメラがこの解像度に対応していません"
   }
 }

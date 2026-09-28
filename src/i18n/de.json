@@ -219,7 +219,11 @@
     "stop": "Stopp",
     "width": "Breite",
     "with the text.": "mit dem Text aus.",
-    "word": "Wort"
+    "word": "Wort",
+    "Frame rate": "Bildrate",
+    "Video frame rate": "Bildrate des Videos",
+    "More ways to start": "Weitere Startoptionen",
+    "From section": "Ab Abschnitt"
   },
   "js": {
     "words": {
@@ -279,6 +283,8 @@
     "confirmDel": "Endgültig löschen?",
     "noRecorder": "Dieser Browser kann kein Video aufnehmen",
     "copied": "Kopiert",
-    "copyFailed": "Kopieren fehlgeschlagen"
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "fpsUnsupported": "Deine Kamera schafft diese Bildrate nicht",
+    "qualityUnsupported": "Deine Kamera nimmt nicht in dieser Auflösung auf"
   }
 }

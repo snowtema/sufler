@@ -28,7 +28,7 @@
     guides: true, frame: false, flip: false,
     countdown: 3, fullscreen: true, progress: false,
     beep: true, mode: 'simple',
-    record: false, camId: '', micId: '', recQuality: '1080', selfView: false, recPause: false,
+    record: false, camId: '', micId: '', recQuality: '1080', recFps: 30, selfView: false, recPause: false,
   };
   // Что настраивается в простом режиме; остальное там берётся из DEFAULTS
   const SIMPLE_KEYS = ['mode', 'wpm', 'fontSize', 'width', 'posX', 'posY', 'beep', 'record', 'camId', 'micId', 'selfView', 'recPause'];
@@ -189,7 +189,7 @@
     posY: (v) => `${v} %`,
   };
   const CHECKS = ['lengthAware', 'guides', 'frame', 'flip', 'fullscreen', 'progress', 'beep', 'record', 'selfView', 'recPause'];
-  const SEGS = { mode: String, chunk: Number, weight: Number, theme: String, align: String, countdown: Number, recQuality: String };
+  const SEGS = { mode: String, chunk: Number, weight: Number, theme: String, align: String, countdown: Number, recQuality: String, recFps: Number };
   const PAUSE_INPUTS = { pShort: 'short', pMedium: 'medium', pLong: 'long' };
 
   function setFill(input) {
@@ -693,7 +693,8 @@
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (_) { wakeLock = null; }
   }
 
-  async function openStage(fromCursor) {
+  async function openStage(from) {
+    const fromCursor = from === true || from === 'cursor';
     if (preview.frame) stopPreview();
     let recFailed = null;
     if (C.record && getParsed().wordCount) {
@@ -706,7 +707,10 @@
     computeTimeline();
 
     idx = findWords(0, 1);
-    if (fromCursor) {
+    if (from && typeof from === 'object' && p.sections[from.section]) {
+      const i = frames.findIndex((f) => f.type === 'words' && f.token >= p.sections[from.section].token);
+      if (i >= 0) idx = i;
+    } else if (fromCursor) {
       const pos = ta.selectionStart;
       const i = frames.findIndex((f) => f.type === 'words' && f.words[f.words.length - 1].srcEnd > pos);
       if (i >= 0) idx = i;
@@ -877,7 +881,10 @@
   async function getStream() {
     if (rec.stream) return rec.stream;
     const [w, h] = QUALITY[C.recQuality] || QUALITY[1080];
-    const video = { width: { ideal: w }, height: { ideal: h }, frameRate: { ideal: 30 } };
+    // max у частоты кадров: так 24 fps получится и с 30-кадровой камеры (браузер проредит кадры)
+    // aspectRatio 16:9: без него камера с вертикальными режимами (iPhone через Continuity Camera)
+    // на запрос 4K может отдать вертикальный 2160×3840 — формально он «ближе» к запросу, чем 1080p
+    const video = { width: { ideal: w }, height: { ideal: h }, aspectRatio: { ideal: 16 / 9 }, frameRate: { ideal: C.recFps, max: C.recFps } };
     const audio = {};
     if (C.camId) video.deviceId = { exact: C.camId };
     if (C.micId) audio.deviceId = { exact: C.micId };
@@ -885,15 +892,19 @@
       rec.stream = await navigator.mediaDevices.getUserMedia({ video, audio: C.micId ? audio : true });
     } catch (err) {
       if (err.name !== 'OverconstrainedError' && err.name !== 'NotFoundError') { showRecError(err); throw err; }
-      // Выбранное устройство отключили — берём устройства по умолчанию
+      // Выбранное устройство отключили или браузер не умеет ограничивать частоту — пробуем мягче
       delete video.deviceId;
+      video.frameRate = { ideal: C.recFps };
       try { rec.stream = await navigator.mediaDevices.getUserMedia({ video, audio: true }); } catch (err2) { showRecError(err2); throw err2; }
     }
     showRecError(null);
+    await keepLandscape(video);
     const v = $('camVideo');
     v.srcObject = rec.stream;
     v.play().catch(() => {});
     startMeter();
+    startFpsMeter();
+    markSupported();
     await fillDevices();
     renderRecUI();
     return rec.stream;
@@ -901,6 +912,7 @@
 
   function releaseStream() {
     stopMeter();
+    stopFpsMeter();
     if (rec.stream) rec.stream.getTracks().forEach((t) => t.stop());
     rec.stream = null;
     $('camVideo').srcObject = null;
@@ -919,6 +931,68 @@
     };
     fill($('camSelect'), 'videoinput', 'video', C.camId, T.camera);
     fill($('micSelect'), 'audioinput', 'audio', C.micId, T.microphone);
+  }
+
+  /** Если камера всё же отдала вертикальный кадр, просим у неё горизонтальный режим. */
+  async function keepLandscape(video) {
+    const track = rec.stream.getVideoTracks()[0];
+    const st = track ? track.getSettings() : {};
+    if (!st.width || !st.height || st.height <= st.width) return;
+    const { deviceId, ...rest } = video;
+    try { await track.applyConstraints({ ...rest, aspectRatio: { min: 1.2 } }); } catch (_) { /* камера умеет только вертикально — оставляем как есть */ }
+  }
+
+  /** Разрешение и частота на превью. FPS считаем по реально пришедшим кадрам, а не по паспорту камеры. */
+  function startFpsMeter() {
+    stopFpsMeter();
+    const v = $('camVideo');
+    const track = rec.stream.getVideoTracks()[0];
+    const label = (fps) => {
+      const st = track ? track.getSettings() : {};
+      // Разрешение по короткой стороне: 1920×1080 и 1080×1920 — это 1080p
+      const short = Math.min(st.width || v.videoWidth || 0, st.height || v.videoHeight || 0);
+      const res = short >= 2000 ? '4K' : short ? `${short}p` : '';
+      $('camInfo').textContent = [res, fps ? `${fps} fps` : ''].filter(Boolean).join(' · ');
+    };
+    label(track && Math.round(track.getSettings().frameRate || 0));
+    if (!('requestVideoFrameCallback' in HTMLVideoElement.prototype)) return;
+    let frames = 0;
+    let since = performance.now();
+    const onFrame = (now) => {
+      frames++;
+      if (now - since >= 1000) {
+        label(Math.round((frames * 1000) / (now - since)));
+        frames = 0;
+        since = now;
+      }
+      rec.fpsCb = v.requestVideoFrameCallback(onFrame);
+    };
+    rec.fpsCb = v.requestVideoFrameCallback(onFrame);
+  }
+
+  function stopFpsMeter() {
+    const v = $('camVideo');
+    if (rec.fpsCb && v.cancelVideoFrameCallback) v.cancelVideoFrameCallback(rec.fpsCb);
+    rec.fpsCb = 0;
+    $('camInfo').textContent = '';
+  }
+
+  /** Разрешения и частоты, которые камера не тянет, делаем неактивными. */
+  function markSupported() {
+    const track = rec.stream && rec.stream.getVideoTracks()[0];
+    const caps = track && track.getCapabilities ? track.getCapabilities() : {};
+    const maxFps = caps.frameRate && caps.frameRate.max;
+    for (const b of $('recFps').querySelectorAll('button')) {
+      const off = !!maxFps && Number(b.dataset.v) > maxFps + 0.5;
+      b.disabled = off;
+      b.title = off ? T.fpsUnsupported : '';
+    }
+    const maxSide = Math.max((caps.width && caps.width.max) || 0, (caps.height && caps.height.max) || 0);
+    for (const b of $('recQuality').querySelectorAll('button')) {
+      const off = !!maxSide && maxSide < QUALITY[b.dataset.v][0] * 0.95;
+      b.disabled = off;
+      b.title = off ? T.qualityUnsupported : '';
+    }
   }
 
   function startMeter() {
@@ -951,7 +1025,7 @@
   function startTake() {
     if (!rec.stream) return;
     if (rec.mime === null) rec.mime = pickMime();
-    const bps = (QUALITY[C.recQuality] || QUALITY[1080])[2];
+    const bps = (QUALITY[C.recQuality] || QUALITY[1080])[2] * Math.max(1, C.recFps / 30);
     let recorder;
     try { recorder = new MediaRecorder(rec.stream, rec.mime ? { mimeType: rec.mime, videoBitsPerSecond: bps } : { videoBitsPerSecond: bps }); }
     catch (_) { recorder = new MediaRecorder(rec.stream); }
@@ -1109,6 +1183,7 @@
     $('camSelect').addEventListener('change', () => { S.camId = $('camSelect').value; onSettingsChange(); restartStream(); });
     $('micSelect').addEventListener('change', () => { S.micId = $('micSelect').value; onSettingsChange(); restartStream(); });
     $('recQuality').addEventListener('click', (e) => { if (e.target.closest('button')) restartStream(); });
+    $('recFps').addEventListener('click', (e) => { if (e.target.closest('button')) restartStream(); });
     if (navigator.mediaDevices) navigator.mediaDevices.addEventListener('devicechange', () => { if (rec.stream) fillDevices(); });
     $('takesOpen').addEventListener('click', openTakes);
     $('takesList').addEventListener('click', onTakesClick);
@@ -1162,6 +1237,49 @@
         }
       });
     }
+  }
+
+  // ——— Меню «Начать чтение»: стрелка справа — с начала, с курсора или с раздела ———
+  function bindStartMenu() {
+    const toggle = $('startMore');
+    const menu = $('startMenu');
+    $('cursorKey').textContent = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘↵' : 'Ctrl+↵';
+    const items = () => [...menu.querySelectorAll('button')];
+    const open = (focusFirst) => {
+      const sections = getParsed().sections;
+      $('startSections').hidden = !sections.length;
+      $('startSectionList').innerHTML = sections.map((sec, i) =>
+        `<button type="button" role="menuitem" data-section="${i}">${esc(sec.title)}</button>`).join('');
+      menu.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      if (focusFirst) items()[0].focus();
+    };
+    const close = (restoreFocus) => {
+      menu.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) toggle.focus();
+    };
+    toggle.addEventListener('click', () => (menu.hidden ? open(false) : close(false)));
+    toggle.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); open(true); }
+    });
+    menu.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      close(false);
+      if (b.dataset.section != null) openStage({ section: Number(b.dataset.section) });
+      else openStage(b.dataset.start === 'cursor' ? 'cursor' : 'top');
+    });
+    menu.addEventListener('keydown', (e) => {
+      const list = items();
+      const i = list.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        list[(i + (e.key === 'ArrowDown' ? 1 : list.length - 1)) % list.length].focus();
+      } else if (e.key === 'Escape') { e.preventDefault(); close(true); }
+      else if (e.key === 'Tab') close(false);
+    });
+    document.addEventListener('click', (e) => { if (!menu.hidden && !e.target.closest('#startSplit')) close(false); });
   }
 
   // ——— Переключатель языка ———
@@ -1221,7 +1339,7 @@
     $('toolbar').addEventListener('click', onToolbar);
     bindLangMenu();
     $('start').addEventListener('click', () => openStage(false));
-    $('startCursor').addEventListener('click', () => openStage(true));
+    bindStartMenu();
     $('monitorPlay').addEventListener('click', () => (preview.frame ? stopPreview() : startPreview()));
 
     const skillDialog = $('skillDialog');

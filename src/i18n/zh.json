@@ -219,7 +219,11 @@
     "stop": "暂停",
     "width": "宽度",
     "with the text.": "并附上文本。",
-    "word": "词"
+    "word": "词",
+    "Frame rate": "帧率",
+    "Video frame rate": "视频帧率",
+    "More ways to start": "更多开始方式",
+    "From section": "从分段开始"
   },
   "js": {
     "words": {
@@ -277,6 +281,8 @@
     "confirmDel": "确定删除吗？",
     "noRecorder": "此浏览器无法录制视频",
     "copied": "已复制",
-    "copyFailed": "复制失败"
+    "copyFailed": "复制失败",
+    "fpsUnsupported": "摄像头不支持此帧率",
+    "qualityUnsupported": "摄像头不支持此分辨率"
   }
 }

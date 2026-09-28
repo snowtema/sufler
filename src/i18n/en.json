@@ -129,6 +129,8 @@
     "confirmDel": "Delete for good?",
     "noRecorder": "This browser can’t record video",
     "copied": "Copied",
-    "copyFailed": "Couldn’t copy"
+    "copyFailed": "Couldn’t copy",
+    "fpsUnsupported": "Your camera can’t do this frame rate",
+    "qualityUnsupported": "Your camera doesn’t record at this resolution"
   }
 }
