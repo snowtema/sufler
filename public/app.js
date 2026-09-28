@@ -975,9 +975,10 @@
 
   async function setupStream(stream) {
     rec.stream = stream;
-    showRecMessage(rec.fellBack ? T.camFallback : '');
     watchTracks(stream);
     if (!MOBILE) await keepLandscape(rec.lastVideo);
+    const fpsNote = await ensureFps(stream);
+    showRecMessage([rec.fellBack ? T.camFallback : '', fpsNote].filter(Boolean).join(' '));
     const vtrack = rec.stream.getVideoTracks()[0];
     rec.facing = MOBILE ? ((vtrack && vtrack.getSettings().facingMode) || C.facing) : 'user';
     const v = $('camVideo');
@@ -1038,6 +1039,27 @@
     if (!stage.hidden) toast(T.camEnded, 5000);
   }
 
+
+  /**
+   * Частота кадров. Браузер выбирает режим камеры по общей похожести на запрос, и разрешение может
+   * перевесить частоту: если 60 fps камера даёт только в 720p, а просили 1080p, выйдет 1080p и 30 fps.
+   * Тогда делаем частоту обязательной — пусть камера снизит разрешение — и говорим, что получилось.
+   */
+  async function ensureFps(stream) {
+    const track = stream.getVideoTracks()[0];
+    const want = C.recFps;
+    const fps = () => Math.round(track.getSettings().frameRate || 0);
+    if (!track || !track.applyConstraints || !fps() || fps() >= want - 1) return '';
+    const short = () => { const st = track.getSettings(); return Math.min(st.width || 0, st.height || 0); };
+    const before = short();
+    const { deviceId, facingMode, ...rest } = rec.lastVideo;
+    const st = track.getSettings();
+    if (!MOBILE && st.width > st.height) rest.aspectRatio = { min: 1.2 }; // не отдать горизонтальность ради частоты
+    try { await track.applyConstraints({ ...rest, frameRate: { min: want - 1, ideal: want } }); } catch (_) { /* не умеет — остаётся как было */ }
+    if (rec.stream !== stream) return '';
+    if (fps() < want - 1) return tpl(T.fpsLimited, { want, fps: fps() });
+    return short() < before ? tpl(T.fpsTradeoff, { want, res: `${short()}p` }) : '';
+  }
 
   /** Компьютер: если камера всё же отдала вертикальный кадр, просим у неё горизонтальный режим. */
   async function keepLandscape(video) {
@@ -1257,13 +1279,18 @@
   function startTake() {
     if (!rec.stream) return;
     if (rec.mime === null) rec.mime = pickMime();
-    const bps = (QUALITY[C.recQuality] || QUALITY[1080])[2] * Math.max(1, C.recFps / 30);
+    const st = rec.stream.getVideoTracks()[0] ? rec.stream.getVideoTracks()[0].getSettings() : {};
+    // Битрейт — по тому, что камера реально отдаёт: 30 fps вместо 60 или 720p вместо 1080p
+    // не должны писаться с двойным запасом
+    const fps = Math.min(C.recFps, Math.round(st.frameRate || 0) || C.recFps);
+    const shortSide = Math.min(st.width || 0, st.height || 0);
+    const bySize = shortSide >= 2000 ? '2160' : shortSide >= 1000 ? '1080' : shortSide ? '720' : C.recQuality;
+    const bps = Math.min((QUALITY[C.recQuality] || QUALITY[1080])[2], QUALITY[bySize][2]) * Math.max(1, fps / 30);
     const opts = rec.mime ? { mimeType: rec.mime, videoBitsPerSecond: bps } : { videoBitsPerSecond: bps };
     let recorder;
     try { recorder = new MediaRecorder(rec.stream, opts); } catch (_) { recorder = new MediaRecorder(rec.stream); }
     // Куски по секунде: при сбое вкладки не теряется всё, а iOS 26 без timeslice теряет кадры видео
     recorder.start(1000);
-    const st = rec.stream.getVideoTracks()[0] ? rec.stream.getVideoTracks()[0].getSettings() : {};
     const cv = $('camVideo'); // размеры кадра как на экране: у повёрнутого телефона они уже переставлены
     const type = recorder.mimeType || rec.mime || 'video/webm';
     const ext = type.includes('mp4') ? 'mp4' : 'webm';

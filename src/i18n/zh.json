@@ -293,6 +293,8 @@
     "copied": "已复制",
     "copyFailed": "复制失败",
     "fpsUnsupported": "摄像头不支持此帧率",
+    "fpsLimited": "摄像头不支持 {want} fps，将以 {fps} fps 录制。",
+    "fpsTradeoff": "摄像头只有在 {res} 下才能达到 {want} fps，因此已降低分辨率。",
     "qualityUnsupported": "摄像头不支持此分辨率",
     "statusStopTouch": "暂停。点击继续",
     "save": "保存",

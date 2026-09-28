@@ -293,6 +293,8 @@
     "copied": "コピーしました",
     "copyFailed": "コピーできませんでした",
     "fpsUnsupported": "カメラがこのフレームレートに対応していません",
+    "fpsLimited": "このカメラは {want} fps に対応していないため、{fps} fps で録画します。",
+    "fpsTradeoff": "このカメラが {want} fps で撮れるのは {res} のみのため、解像度を下げています。",
     "qualityUnsupported": "カメラがこの解像度に対応していません",
     "statusStopTouch": "ストップ。タップで続きへ",
     "save": "保存",

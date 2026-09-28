@@ -295,6 +295,8 @@
     "copied": "Copié",
     "copyFailed": "Copie impossible",
     "fpsUnsupported": "Votre caméra ne prend pas en charge cette fréquence d’images",
+    "fpsLimited": "La caméra ne fait pas {want} fps : l’enregistrement se fait à {fps} fps.",
+    "fpsTradeoff": "La caméra ne fait {want} fps qu’en {res} : la résolution est donc réduite.",
     "qualityUnsupported": "Votre caméra ne filme pas dans cette résolution",
     "statusStopTouch": "Arrêt. Touchez pour continuer",
     "save": "Enregistrer",

@@ -295,6 +295,8 @@
     "copied": "Kopiert",
     "copyFailed": "Kopieren fehlgeschlagen",
     "fpsUnsupported": "Deine Kamera schafft diese Bildrate nicht",
+    "fpsLimited": "Die Kamera schafft keine {want} fps, aufgenommen wird mit {fps} fps.",
+    "fpsTradeoff": "Die Kamera liefert {want} fps nur in {res}, daher ist die Auflösung niedriger.",
     "qualityUnsupported": "Deine Kamera nimmt nicht in dieser Auflösung auf",
     "statusStopTouch": "Stopp. Tippen zum Weiterlesen",
     "save": "Sichern",

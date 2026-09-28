@@ -295,6 +295,8 @@
     "copied": "Copiado",
     "copyFailed": "No se pudo copiar",
     "fpsUnsupported": "Tu cámara no admite esta frecuencia de fotogramas",
+    "fpsLimited": "La cámara no admite {want} fps: se graba a {fps} fps.",
+    "fpsTradeoff": "La cámara solo da {want} fps en {res}, así que la resolución es menor.",
     "qualityUnsupported": "Tu cámara no graba a esta resolución",
     "statusStopTouch": "Parada. Toca para seguir",
     "save": "Guardar",
