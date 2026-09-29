@@ -2,6 +2,8 @@
 
 Веб-суфлёр для записи видео — [sufler.artemslizhik.com](https://sufler.artemslizhik.com): текст показывается по одному слову в одной точке экрана, прямо под камерой, чтобы глаза не бегали по строчкам. Темп, паузы и акценты задаются разметкой внутри текста.
 
+Всё работает в браузере: без сервера, регистрации и сборщиков — чистые HTML, CSS и JavaScript без зависимостей. Код открыт по лицензии [MIT](LICENSE).
+
 ## Запуск
 
 Английская версия открывается в корне (`/`), русская — на `/ru/`. Обе страницы собираются из одного шаблона `src/index.html`, поэтому перед локальным запуском нужна сборка:
@@ -80,6 +82,8 @@ npx wrangler dev
 
 Каждый пуш в `main` выкатывает сайт на Cloudflare через GitHub Actions (`.github/workflows/deploy.yml`). Нужен секрет репозитория `CLOUDFLARE_API_TOKEN` — токен с шаблоном «Edit Cloudflare Workers», у которого в зонах есть `artemslizhik.com`.
 
+Чтобы развернуть свою копию, поменяйте в `wrangler.jsonc` `account_id` и домен в `routes`, а в `scripts/build.mjs` — адрес сайта `SITE`. Сайт — обычные статические файлы из `public/`, так что подойдёт и любой другой хостинг: достаточно выполнить `node scripts/build.mjs` и выложить папку `public/`.
+
 Вручную:
 
 ```bash
@@ -106,3 +110,7 @@ cp -R skill/sufler-markup ~/.claude/skills/
 cp public/parser.js skill/sufler-markup/scripts/parser.js
 cp -R skill/sufler-markup ~/.claude/skills/
 ```
+
+## Лицензия
+
+[MIT](LICENSE) — можно использовать, менять и распространять, в том числе в коммерческих проектах, сохранив уведомление об авторских правах.

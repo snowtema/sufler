@@ -51,7 +51,7 @@
         "Choisissez la position « Sous la caméra » ou faites glisser le bloc de mots pendant une pause. Réglez la largeur et la taille du texte pour que le regard quitte à peine l’objectif."
       ]
     ],
-    "meta": "Créé par <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Gratuit, sans inscription et sans publicité."
+    "meta": "Créé par <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Gratuit, sans inscription et sans publicité. Le code est <a href=\"https://github.com/snowtema/sufler\">open source</a> (MIT)."
   },
   "llms": {
     "title": "référence complète du balisage",

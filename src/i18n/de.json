@@ -51,7 +51,7 @@
         "Wähle die Position „Unter der Kamera“ oder verschiebe den Wortblock in der Pause. Stell Breite und Schriftgröße so ein, dass dein Blick das Objektiv kaum verlässt."
       ]
     ],
-    "meta": "Gemacht von <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Kostenlos, ohne Anmeldung und ohne Werbung."
+    "meta": "Gemacht von <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Kostenlos, ohne Anmeldung und ohne Werbung. Der Code ist <a href=\"https://github.com/snowtema/sufler\">Open Source</a> (MIT)."
   },
   "llms": {
     "title": "vollständige Referenz der Markierung",

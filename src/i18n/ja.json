@@ -51,7 +51,7 @@
         "位置で「カメラの下」を選ぶか、一時停止中にブロックをドラッグしてください。幅と文字サイズを調整すれば、視線がレンズからほとんど離れません。"
       ]
     ],
-    "meta": "制作：<a href=\"https://artemslizhik.com/\">Artem Slizhik</a>。無料・登録不要・広告なし。"
+    "meta": "制作：<a href=\"https://artemslizhik.com/\">Artem Slizhik</a>。無料・登録不要・広告なし。コードは<a href=\"https://github.com/snowtema/sufler\">オープンソース</a>（MIT）です。"
   },
   "llms": {
     "title": "マークアップの完全リファレンス",

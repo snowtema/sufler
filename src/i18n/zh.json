@@ -51,7 +51,7 @@
         "在位置中选择“摄像头下方”，或在暂停时拖动文字块。调整宽度和字号，让视线几乎不离开镜头。"
       ]
     ],
-    "meta": "作者：<a href=\"https://artemslizhik.com/\">Artem Slizhik</a>。免费、无需注册、无广告。"
+    "meta": "作者：<a href=\"https://artemslizhik.com/\">Artem Slizhik</a>。免费、无需注册、无广告。代码<a href=\"https://github.com/snowtema/sufler\">开源</a>（MIT 许可）。"
   },
   "llms": {
     "title": "标记完整参考",

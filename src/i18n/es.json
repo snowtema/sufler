@@ -51,7 +51,7 @@
         "Elige la posición «Bajo la cámara» o arrastra el bloque de palabras en pausa. Ajusta el ancho y el tamaño de letra para que la mirada apenas se aparte del objetivo."
       ]
     ],
-    "meta": "Hecho por <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Gratis, sin registro y sin anuncios."
+    "meta": "Hecho por <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Gratis, sin registro y sin anuncios. El código es <a href=\"https://github.com/snowtema/sufler\">abierto</a> (MIT)."
   },
   "llms": {
     "title": "referencia completa de marcado",

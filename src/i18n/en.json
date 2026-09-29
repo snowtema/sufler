@@ -51,7 +51,7 @@
         "Pick the “Under camera” position or drag the word block while paused. Adjust the width and font size so your gaze barely leaves the lens."
       ]
     ],
-    "meta": "Made by <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Free, no sign-up, no ads."
+    "meta": "Made by <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Free, no sign-up, no ads. The code is <a href=\"https://github.com/snowtema/sufler\">open source</a> (MIT)."
   },
   "llms": {
     "title": "full markup reference",

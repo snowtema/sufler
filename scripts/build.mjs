@@ -38,7 +38,7 @@ const blocks = {
       name: d.brand, alternateName: m.ldAlternateName, url: urlOf(c), image: ogOf(c),
       description: m.ldDescription, applicationCategory: 'MultimediaApplication',
       operatingSystem: m.ldOs, browserRequirements: m.ldBrowser, inLanguage: d.hreflang,
-      isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      isAccessibleForFree: true, license: 'https://opensource.org/licenses/MIT', offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       featureList: m.ldFeatures,
       creator: { '@type': 'Person', name: 'Artem Slizhik', url: 'https://artemslizhik.com/' },
     };

@@ -37,6 +37,7 @@ Everything runs locally in the browser: no sign-up, no server, no ads. Nothing i
 - [Full markup reference](https://sufler.artemslizhik.com/llms-full.txt): markup rules and a ready-made prompt any AI assistant can use to mark up a speech for Sufler
 - [Markup prompt in Russian](https://sufler.artemslizhik.com/ru/llms-full.txt)
 - [Claude skill](https://sufler.artemslizhik.com/sufler-markup.zip): automatic markup with result checking
+- [Source code](https://github.com/snowtema/sufler): open source under the MIT license
 
 ## Author
 

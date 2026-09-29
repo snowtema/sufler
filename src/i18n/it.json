@@ -51,7 +51,7 @@
         "Scegli la posizione «Sotto la webcam» o trascina il blocco di parole in pausa. Regola larghezza e dimensione del testo perché lo sguardo quasi non lasci l’obiettivo."
       ]
     ],
-    "meta": "Creato da <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Gratis, senza registrazione e senza pubblicità."
+    "meta": "Creato da <a href=\"https://artemslizhik.com/\">Artem Slizhik</a>. Gratis, senza registrazione e senza pubblicità. Il codice è <a href=\"https://github.com/snowtema/sufler\">open source</a> (MIT)."
   },
   "llms": {
     "title": "riferimento completo della marcatura",
