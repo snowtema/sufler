@@ -1,116 +1,126 @@
-# Суфлёр
+# Sufler
 
-Веб-суфлёр для записи видео — [sufler.artemslizhik.com](https://sufler.artemslizhik.com): текст показывается по одному слову в одной точке экрана, прямо под камерой, чтобы глаза не бегали по строчкам. Темп, паузы и акценты задаются разметкой внутри текста.
+**English** | [Русский](README.ru.md)
 
-Всё работает в браузере: без сервера, регистрации и сборщиков — чистые HTML, CSS и JavaScript без зависимостей. Код открыт по лицензии [MIT](LICENSE).
+A web teleprompter for recording video: [sufler.artemslizhik.com](https://sufler.artemslizhik.com). Your script is shown one word at a time in a single spot right under the camera, so your eyes don't wander across lines. Pace, pauses and emphasis are set with markup inside the text.
 
-## Запуск
+Everything runs in the browser: no server, no sign-up, no bundler. Plain HTML, CSS and JavaScript with zero dependencies. Open source under the [MIT](LICENSE) license.
 
-Английская версия открывается в корне (`/`), русская — на `/ru/`. Обе страницы собираются из одного шаблона `src/index.html`, поэтому перед локальным запуском нужна сборка:
+## Features
+
+- One word at a time in a fixed spot: speed in words per minute, adjustable block width, font size and position.
+- Inline markup for pauses, emphasis, slower or faster passages, stops, stage cues and sections. Markup can be added automatically with a Claude skill or a prompt for any AI assistant.
+- Local video recording in the browser: MP4 or WebM, up to 4K, 24/30/60 fps, with an option to see yourself behind the text. Takes survive a page reload.
+- A mobile mode that works like an app, not a shrunken desktop page.
+- Eight interface languages, with word segmentation for Japanese and Chinese.
+
+## Running locally
+
+All language versions are built from one template, `src/index.html`, so run the build before serving:
 
 ```bash
 node scripts/build.mjs && python3 -m http.server 5173 -d public
-# или так же, как в продакшене (сборка запустится сама):
+# or the same way as in production (the build runs automatically):
 npx wrangler dev
 ```
 
-## Языки
+## Languages
 
-Восемь языков: английский в корне (`/`), русский (`/ru/`), испанский (`/es/`), итальянский (`/it/`), немецкий (`/de/`), французский (`/fr/`), японский (`/ja/`) и китайский (`/zh/`). Все страницы собираются из одного шаблона `src/index.html` и словарей `src/i18n/<язык>.json`:
+Eight languages: English at the root (`/`), Russian (`/ru/`), Spanish (`/es/`), Italian (`/it/`), German (`/de/`), French (`/fr/`), Japanese (`/ja/`) and Chinese (`/zh/`). Every page is built from the `src/index.html` template and the `src/i18n/<lang>.json` dictionaries:
 
-- `{{English text}}` в шаблоне — строка интерфейса, перевод берётся из `strings` словаря (ключ — английский текст);
-- `{{@head}}`, `{{@langmenu}}`, `{{@about}}`, `{{@prompt}}`, `{{@i18n}}` — блоки, которые генерирует `scripts/build.mjs` из словаря: мета-теги и JSON-LD, меню языков, «Что такое Sufler» с FAQ, промпт для нейросетей, строки для JS;
-- в словаре также демо-текст, промпт, строки JS (склонения через `Intl.PluralRules`) и тексты OG-картинки.
+- `{{English text}}` in the template is an interface string; its translation comes from the dictionary's `strings` (the key is the English text);
+- `{{@head}}`, `{{@langmenu}}`, `{{@about}}`, `{{@prompt}}`, `{{@i18n}}` are blocks that `scripts/build.mjs` generates from the dictionary: meta tags and JSON-LD, the language menu, the “What is Sufler” section with an FAQ, the AI prompt, and strings for JS;
+- each dictionary also holds the demo text, the prompt, JS strings (plurals via `Intl.PluralRules`) and the OG image text.
 
-Сборка падает, если в каком-то языке не хватает строки. Собрать часть языков: `SUFLER_LANGS=en,ru node scripts/build.mjs`. Переключатель языков в шапке запоминает выбор.
+The build fails if a language is missing a string. To build only some languages: `SUFLER_LANGS=en,ru node scripts/build.mjs`. The language switcher in the header remembers the choice.
 
-Японский и китайский пишутся без пробелов, поэтому парсер делит такой текст на слова через `Intl.Segmenter` и понимает их пунктуацию; косые черты и теги там можно писать без пробелов.
+Japanese and Chinese are written without spaces, so the parser splits them into words with `Intl.Segmenter` and understands their punctuation; slashes and tags can be written without spaces there.
 
-## Разметка
+## Markup
 
-| Разметка | Что делает |
+| Markup | What it does |
 |---|---|
-| `/` `//` `///` | Короткая, обычная и длинная пауза |
-| `[PAUSE 2.5]` | Пауза в секундах |
-| `[STOP]` | Остановка до нажатия пробела |
-| `*слово*` | Акцент |
-| `[SLOW]…[/SLOW]`, `[FAST]…[/FAST]` | Участок медленнее или быстрее |
-| `[любой текст]` | Ремарка над словом, не читается |
-| `# Заголовок` | Раздел для перехода между дублями |
+| `/` `//` `///` | Short, medium and long pause |
+| `[PAUSE 2.5]` | Pause in seconds |
+| `[STOP]` | Stop until Space is pressed |
+| `*word*` | Emphasis |
+| `[SLOW]…[/SLOW]`, `[FAST]…[/FAST]` | A slower or faster passage |
+| `[any text]` | A cue above the word, not read aloud |
+| `# Heading` | A section for jumping between takes |
 
-Знаки препинания и пустые строки добавляют паузы автоматически.
+Punctuation and blank lines add pauses automatically.
 
-## Телефоны и планшеты
+## Phones and tablets
 
-На устройствах с сенсорным экраном без мыши (`hover: none`, `pointer: coarse`) Суфлёр работает как приложение, а не как уменьшенная десктопная страница:
+On touch devices without a mouse (`hover: none`, `pointer: coarse`), Sufler works like an app rather than a shrunken desktop page:
 
-- сценарий на весь экран, чипы разметки листаются и при наборе прилипают к клавиатуре, рядом «Вставить» и «Готово»;
-- внизу фиксированная панель: кнопка записи и «Начать чтение» со стрелкой (меню — лист снизу);
-- настройки в нижней шторке, закрывается свайпом вниз;
-- при чтении — тап для паузы, на паузе крупные кнопки и степперы скорости и шрифта, крестик и системная «назад» закрывают чтение; клавиатурных подсказок нет;
-- запись с фронтальной или основной камеры, в портретной ориентации видео вертикальное 9:16, «Сохранить» открывает системное меню «Поделиться».
+- the script takes the full screen; markup chips scroll and stick to the keyboard while typing, next to “Paste” and “Done”;
+- a fixed bottom bar holds the record button and “Start reading” with a chevron (its menu opens as a bottom sheet);
+- settings live in a bottom sheet that closes with a swipe down;
+- while reading, tap to pause; the pause screen has large buttons and steppers for speed and font size; the X button and the system “back” close the reader; no keyboard hints;
+- recording works with the front or back camera; held upright, the video is vertical; “Save” opens the system share sheet.
 
-Принудительно включить или выключить мобильный режим для отладки: `?device=mobile` или `?device=desktop`.
+To force the mobile mode on or off for debugging: `?device=mobile` or `?device=desktop`.
 
-## Запись видео
+## Video recording
 
-Включите в настройках «Записывать видео с камеры», и Суфлёр будет писать видео с камеры и микрофона прямо в браузере (getUserMedia + MediaRecorder). Ничего не уходит на сервер: готовые дубли скачиваются в «Загрузки».
+Turn on “Record video from camera” in the settings, and Sufler records the camera and microphone right in the browser (getUserMedia + MediaRecorder). Nothing is uploaded: finished takes are saved to your device.
 
-- Каждый запуск чтения — отдельный дубль. Запись идёт с начала обратного отсчёта до выхода со сцены (Esc), пауза чтения её не трогает, R начинает новый дубль. Настройка «Ставить запись на паузу вместе с чтением» включает паузу записи; в этом режиме после конца текста запись встаёт на паузу через 2 секунды, чтобы не обрезать последнее слово.
-- «Видеть себя за текстом» показывает камеру фоном под словами, как зеркало. В файл пишется чистая камера, без текста.
-- Формат MP4, если браузер умеет, иначе WebM. Качество в режиме «Про»: 720p, 1080p или 4K.
-- Дубли пишутся по ходу записи в хранилище браузера (OPFS) сегментами по ~5 секунд: не копятся в памяти вкладки, переживают перезагрузку, а если вкладка упадёт посреди дубля, он восстановится с пометкой «восстановлен» (теряются максимум последние секунды). Где OPFS нет, дубли живут только в открытой вкладке, и при закрытии браузер предупредит.
-- Камеру отключили или её забрало другое приложение: чтение встаёт на паузу, записанное сохраняется. Выбранная камера пропала — Суфлёр берёт встроенную и пишет об этом в настройках.
+- Each reading run is a separate take. Recording starts with the countdown and lasts until you leave the reader (Esc); pausing the reading doesn't pause the recording, and R starts a new take. The “Pause recording when reading pauses” setting changes that; in this mode, after the end of the text, recording pauses 2 seconds later so the last word isn't cut off.
+- “See yourself behind the text” shows the camera behind the words like a mirror. The file contains the clean camera image, without the text.
+- MP4 if the browser supports it, otherwise WebM. In Pro mode: 720p, 1080p or 4K and 24, 30 or 60 fps. If the camera can't do the chosen frame rate at this resolution, it lowers the resolution, and the settings say so.
+- Takes are written to browser storage (OPFS) during recording in ~5-second segments: they don't pile up in the tab's memory, they survive a reload, and if the tab crashes mid-take, the take is restored and marked “recovered” (at most the last few seconds are lost). Without OPFS, takes live only in the open tab, and the browser warns before closing it.
+- If the camera is unplugged or taken by another app, reading pauses and what was recorded is kept. If the selected camera disappears, Sufler switches to the default one and says so in the settings.
 
-## SEO и GEO
+## SEO and GEO
 
-- `src/index.html` — title, description, canonical, `hreflang` для обеих версий, Open Graph и Twitter, JSON-LD `WebApplication`, блок «Что такое Суфлёр» с короткими ответами (текст есть прямо в HTML, его видят краулеры без JavaScript).
-- `public/robots.txt` — открыт для всех, AI-поиск и ассистенты разрешены явно.
-- `public/llms.txt` — описание для нейросетей по стандарту llms.txt (на английском, со ссылками на русскую версию).
-- `llms-full.txt` (и `/<язык>/llms-full.txt`) и `sitemap.xml` собираются при деплое (`scripts/build.mjs`): полная справка с промптом на каждом языке, в sitemap — все версии с `hreflang` и дата сборки.
-- `public/og.png`, `public/og-<язык>.png` — картинки для превью ссылок на каждом языке. Шаблон `scripts/og-template.html`, тексты — в поле `og` словаря. Перерисовать (нужен Google Chrome): `node scripts/og.mjs` или `node scripts/og.mjs ja zh`.
+- `src/index.html`: title, description, canonical, `hreflang` for every language, Open Graph and Twitter, JSON-LD `WebApplication`, and a “What is Sufler” section with short answers (the text is in the HTML itself, so crawlers see it without JavaScript).
+- `public/robots.txt`: open to everyone, with AI search and assistants explicitly allowed.
+- `public/llms.txt`: a description for AI assistants following the llms.txt standard.
+- `llms-full.txt` (and `/<lang>/llms-full.txt`) and `sitemap.xml` are generated at deploy time (`scripts/build.mjs`): the full reference with the prompt in every language; the sitemap lists every version with `hreflang` and the build date.
+- `public/og.png`, `public/og-<lang>.png`: link preview images for each language. The template is `scripts/og-template.html`, the text is in the dictionary's `og` field. To re-render (requires Google Chrome): `node scripts/og.mjs` or `node scripts/og.mjs ja zh`.
 
-## Файлы
+## Files
 
-- `src/index.html` и `src/i18n/*.json` — шаблон страницы и словари восьми языков (собираются в `public/index.html` и `public/<язык>/index.html`)
-- `public/parser.js` — разбор разметки в последовательность кадров и расчёт длительности
-- `public/app.js` — редактор, настройки и сцена чтения
-- `public/index.html`, `public/styles.css` — интерфейс
-- `wrangler.jsonc` — конфиг Cloudflare Workers (статические файлы + домен)
+- `src/index.html` and `src/i18n/*.json`: the page template and the eight dictionaries (built into `public/index.html` and `public/<lang>/index.html`)
+- `public/parser.js`: parses markup into a sequence of frames and calculates the duration
+- `public/app.js`: the editor, settings, reader and recording
+- `public/styles.css`: styles
+- `wrangler.jsonc`: Cloudflare Workers config (static assets and the domain)
 
-## Деплой
+## Deploy
 
-Каждый пуш в `main` выкатывает сайт на Cloudflare через GitHub Actions (`.github/workflows/deploy.yml`). Нужен секрет репозитория `CLOUDFLARE_API_TOKEN` — токен с шаблоном «Edit Cloudflare Workers», у которого в зонах есть `artemslizhik.com`.
+Every push to `main` deploys the site to Cloudflare via GitHub Actions (`.github/workflows/deploy.yml`). It needs a `CLOUDFLARE_API_TOKEN` repository secret: a token from the “Edit Cloudflare Workers” template with access to the site's zone.
 
-Чтобы развернуть свою копию, поменяйте в `wrangler.jsonc` `account_id` и домен в `routes`, а в `scripts/build.mjs` — адрес сайта `SITE`. Сайт — обычные статические файлы из `public/`, так что подойдёт и любой другой хостинг: достаточно выполнить `node scripts/build.mjs` и выложить папку `public/`.
+To deploy your own copy, change `account_id` and the domain in `routes` in `wrangler.jsonc`, and the site address `SITE` in `scripts/build.mjs`. The site is plain static files from `public/`, so any other hosting works too: run `node scripts/build.mjs` and upload the `public/` folder.
 
-Вручную:
+Manually:
 
 ```bash
 npx wrangler deploy
 ```
 
-## Скилл для Claude Code
+## Claude Code skill
 
-В `skill/sufler-markup/` лежит скилл, который сам размечает текст выступления: решает, где пауза, где замедлить или ускорить, что выделить, где поставить стоп и как разбить речь на разделы. Слова автора он не меняет и проверяет результат скриптом `scripts/check.js`.
+`skill/sufler-markup/` contains a skill that marks up a speech on its own: it decides where to pause, where to slow down or speed up, what to emphasize, where to put a stop, and how to split the speech into sections. It never changes the author's words and checks the result with `scripts/check.js`. The skill's instructions are in Russian; it answers in the user's language.
 
-Архив для скачивания лежит на сайте: [sufler-markup.zip](https://sufler.artemslizhik.com/sufler-markup.zip). Он собирается из `skill/` при каждом деплое (`build` в `wrangler.jsonc`), в окне «Разметить автоматически» есть инструкция по установке.
+The downloadable archive is on the site: [sufler-markup.zip](https://sufler.artemslizhik.com/sufler-markup.zip). It is built from `skill/` on every deploy (`build` in `wrangler.jsonc`), and the “Mark up automatically” dialog has installation instructions.
 
-Установка из репозитория:
+Installing from the repository:
 
 ```bash
 cp -R skill/sufler-markup ~/.claude/skills/
 ```
 
-Для тех, кто не хочет ставить скилл, в том же окне есть промпт для любой нейросети (ChatGPT, Gemini, Claude): правила разметки и место для текста выступления, копируется одной кнопкой, можно сразу с текстом из редактора. Промпт лежит в словарях `src/i18n/<язык>.json` (поле `prompt`) и повторяет правила скилла в сжатом виде. Если меняете синтаксис или правила, обновите оба.
+For those who don't want to install the skill, the same dialog has a prompt for any AI assistant (ChatGPT, Gemini, Claude): the markup rules plus a place for your speech, copied with one click, optionally with the text from the editor already inserted. The prompt lives in the `src/i18n/<lang>.json` dictionaries (the `prompt` field) and repeats the skill's rules in condensed form. If you change the syntax or the rules, update both.
 
-Скрипт проверки использует свою копию `parser.js`. После изменений синтаксиса обновите её и переустановите скилл:
+The check script uses its own copy of `parser.js`. After syntax changes, update it and reinstall the skill:
 
 ```bash
 cp public/parser.js skill/sufler-markup/scripts/parser.js
 cp -R skill/sufler-markup ~/.claude/skills/
 ```
 
-## Лицензия
+## License
 
-[MIT](LICENSE) — можно использовать, менять и распространять, в том числе в коммерческих проектах, сохранив уведомление об авторских правах.
+[MIT](LICENSE): you can use, modify and distribute it, including in commercial projects, as long as you keep the copyright notice.
